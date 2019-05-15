@@ -1,0 +1,231 @@
+MainActivity.java:
+
+package com.vedro.flashlight;
+
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.hardware.Camera;
+import android.hardware.Camera.Parameters;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.text.Html;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import android.Manifest;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    String INFO = "INFO_";
+    Button b;
+
+    Camera camera;
+    boolean isFlashOn = false;
+    boolean hasFlash;
+    Parameters params;
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("isFlashOn", isFlashOn);
+        outState.putBoolean("hasFlash", hasFlash);
+        Log.i(INFO, "onSaveState");
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedState) {
+        super.onRestoreInstanceState(savedState);
+        hasFlash = savedState.getBoolean("hasFlash");
+        isFlashOn = !savedState.getBoolean("isFlashOn");
+        Log.i(INFO, "onRestoreState");
+        onClick(null);
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Log.i(INFO, "onCreate");
+
+        // https://github.com/Karumi/Dexter
+        Dexter.withActivity(this)
+                .withPermissions(Manifest.permission.CAMERA,
+                        Manifest.permission.FLASHLIGHT)
+                .withListener(new MultiplePermissionsListener() {
+                    @Override
+                    public void onPermissionsChecked(MultiplePermissionsReport report) {
+                        // toast about ok
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
+
+                    }
+                }).check();
+                
+        b = findViewById(R.id.flash);
+        b.setOnClickListener(this);
+
+        hasFlash = getApplicationContext().getPackageManager()
+                .hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
+
+        if (!hasFlash) {
+            getSupportActionBar().setTitle("You have no camera!");
+        } else {
+            getCamera();
+        }
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (!isFlashOn) {
+            getSupportActionBar().setTitle((Html.fromHtml("<font color=\"#000000\">LIGHT ON!</font>")));
+            getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+            b.setText("Выключить!");
+            turnOnFlash();
+            isFlashOn = true;
+        } else {
+            getSupportActionBar().setTitle((Html.fromHtml("<font color=\"#FFFFFF\">LIGHT OFF...</font>")));
+            getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+            b.setText("Включить!");
+            turnOffFlash();
+            isFlashOn = false;
+        }
+    }
+
+    private void getCamera() {
+        if (camera == null) {
+            try {
+                camera = Camera.open();
+            } catch (RuntimeException e) {
+                getSupportActionBar().setTitle("Error in getCamera() method");
+            }
+        }
+    }
+
+    private void turnOnFlash() {
+        if (!isFlashOn) {
+            if (camera == null || !hasFlash) {
+                return;
+            }
+            
+            params = camera.getParameters();
+            params.setFlashMode(Parameters.FLASH_MODE_TORCH);
+            camera.setParameters(params);
+            camera.startPreview();
+        }
+    }
+
+    private void turnOffFlash() {
+        if (isFlashOn) {
+            if (camera == null) {
+                return;
+            }
+
+            params = camera.getParameters();
+            params.setFlashMode(Parameters.FLASH_MODE_OFF);
+            camera.setParameters(params);
+            camera.stopPreview();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i(INFO, "onPause");
+        turnOffFlash();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i(INFO, "onResume");
+        if (isFlashOn) {
+            isFlashOn = false;
+            onClick(null);
+        }
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.i(INFO, "onRestart");
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.i(INFO, "onStart");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.i(INFO, "onStop");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(INFO, "onDestroy");
+        if (camera != null) {
+            camera.release();
+            camera = null;
+        }
+    }
+}
+
+========================================================================================================
+
+AndroidManifest.xml:
+
+...
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.FLASHLIGHT"/>
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.flash" /> 
+...
+
+========================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="20dp"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:paddingTop="20dp">
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Flashlight"
+        android:id="@+id/button1"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+</RelativeLayout>
+
+==================================================================================================================================
+
+build.gradle (Module:app):
+
+dependencies {
+    ...
+    implementation 'com.karumi:dexter:5.0.0'
+    ...
+}
