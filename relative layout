@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#eee">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5dp"
+        android:text="Relative Layout Example"
+        android:textSize="17dp" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:background="#ccc"
+        android:paddingTop="10dp">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="20dp"
+            android:text="Введите Ваши данные"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/text_login"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_below="@id/title"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="30dp"
+            android:gravity="center_vertical"
+            android:text="Login:" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_below="@id/title"
+            android:layout_marginRight="20dp"
+            android:layout_toRightOf="@id/text_login" />
+
+        <TextView
+            android:id="@+id/text_password"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_below="@id/text_login"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="5dp"
+            android:layout_marginTop="20dp"
+            android:gravity="center_vertical"
+            android:text="Password:" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_below="@id/text_login"
+            android:layout_marginRight="20dp"
+            android:inputType="textPassword"
+            android:layout_marginTop="20dp"
+            android:layout_toRightOf="@id/text_password" />
+
+        <Button
+            android:id="@+id/btn_enter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/text_password"
+            android:layout_centerHorizontal="true"
+            android:layout_margin="20dp"
+            android:text="Войти" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/reg_link"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="Зарегистрироваться"
+        android:layout_marginBottom="15dp"
+        android:layout_marginTop="5dp"
+        android:textColor="#00f"
+        android:textSize="15dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/reg_link"
+        android:layout_centerHorizontal="true"
+        android:text="Нет аккаунта?"
+        android:textSize="17dp" />
+</RelativeLayout>
