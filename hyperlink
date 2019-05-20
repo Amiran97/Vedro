@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="10dp"
+        android:autoLink="web"
+        android:linksClickable="true"
+        android:text="https://t.me/trance_essential"
+        android:textColorHighlight="#01000000"
+        android:textColorLink="#F00"
+        android:textSize="20sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="10dp"
+        android:autoLink="email"
+        android:linksClickable="true"
+        android:text="sunmeatrich@gmail.com"
+        android:textColorLink="#FA0"
+        android:textSize="30sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="10dp"
+        android:autoLink="phone"
+        android:linksClickable="true"
+        android:text="0635500055"
+        android:textColorLink="#0F0"
+        android:textSize="30sp" />
+
+</LinearLayout>
