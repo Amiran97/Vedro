@@ -1,0 +1,109 @@
+MainActivity.java:
+
+package com.vedro.verticalseekbar;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.widget.SeekBar;
+
+class VerticalSeekBar extends android.support.v7.widget.AppCompatSeekBar {
+
+    public VerticalSeekBar(Context context) {
+        super(context);
+    }
+
+    public VerticalSeekBar(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+    }
+
+    public VerticalSeekBar(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(h, w, oldh, oldw);
+    }
+
+    @Override
+    protected synchronized void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(heightMeasureSpec, widthMeasureSpec);
+        setMeasuredDimension(getMeasuredHeight(), getMeasuredWidth());
+    }
+
+    protected void onDraw(Canvas c) {
+        c.rotate(-90);
+        c.translate(-getHeight(), 0);
+
+        super.onDraw(c);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (!isEnabled()) {
+            return false;
+        }
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_MOVE:
+            case MotionEvent.ACTION_UP:
+                setProgress(getMax() - (int) (getMax() * event.getY() / getHeight()));
+                onSizeChanged(getWidth(), getHeight(), 0, 0);
+                break;
+
+            case MotionEvent.ACTION_CANCEL:
+                break;
+        }
+        return true;
+    }
+}
+
+public class MainActivity extends AppCompatActivity implements android.support.v7.widget.AppCompatSeekBar.OnSeekBarChangeListener {
+    VerticalSeekBar sb;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        sb = findViewById(R.id.vsb1);
+
+        sb.setOnSeekBarChangeListener(this);
+        sb.setMax(200);
+        sb.setProgress(100);
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+        getSupportActionBar().setTitle(sb.getProgress() + "");
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
+    }
+}
+
+=========================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.vedro.verticalseekbar.VerticalSeekBar
+        android:id="@+id/vsb1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</LinearLayout>
