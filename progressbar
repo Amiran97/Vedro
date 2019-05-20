@@ -1,0 +1,85 @@
+MainActivity.java:
+
+package com.vedro.progressbar;
+
+import android.os.Handler;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.Toast;
+
+public class MainActivity extends AppCompatActivity {
+
+    Handler h = new Handler();
+    ProgressBar p1;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        p1 = findViewById(R.id.progressBar4);
+    }
+
+    public void onClick(View v) {
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                p1.incrementProgressBy(1);
+                h.postDelayed(this, 200);
+            }
+        });
+    }
+}
+
+=========================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp" />
+
+    <ProgressBar
+        android:id="@+id/progressBar2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:layout_margin="10dp" />
+
+    <ProgressBar
+        android:id="@+id/progressBar3"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp" />
+
+    <ProgressBar
+        android:id="@+id/progressBar4"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:layout_margin="10dp"
+        android:indeterminate="false" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:onClick="onClick"
+        android:text="Start Incrementing Progress By 1"
+        android:textAllCaps="false">
+
+    </Button>
+</LinearLayout>
