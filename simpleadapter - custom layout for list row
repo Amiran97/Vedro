@@ -1,0 +1,82 @@
+res / layout / my_item.xml:
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/linearLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/id"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="id" />
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="7"
+        android:text="name" />
+
+    <TextView
+        android:id="@+id/phone"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="5"
+        android:text="phone" />
+
+</LinearLayout>
+
+=========================================================================
+
+MainActivity.java:
+
+package com.alex.adapters;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        ListView people = findViewById(R.id.list);
+
+        ArrayList<HashMap<String, String>> al = new ArrayList<>();
+        HashMap<String, String> map;
+
+        map = new HashMap<>();
+        map.put("id", "1");
+        map.put("name", "Александр Загоруйко");
+        map.put("phone", "+38 063 22 000 22");
+        al.add(map);
+
+        map = new HashMap<>();
+        map.put("id", "2");
+        map.put("name", "Данила Кириллов");
+        map.put("phone", "+38 050 050 00 50");
+        al.add(map);
+
+        map = new HashMap<>();
+        map.put("id", "3");
+        map.put("name", "Иван Кожевин");
+        map.put("phone", "+38 067 67 11 777");
+        al.add(map);
+
+        SimpleAdapter adapter = new SimpleAdapter(this, al, R.layout.my_item,
+                new String[]{"id", "name", "phone"},
+                new int[]{R.id.id, R.id.name, R.id.phone});
+
+        people.setAdapter(adapter);
+
+    }
+}
