@@ -1,0 +1,98 @@
+my_item.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_gravity="center_horizontal"
+        android:scaleType="fitXY" />
+</LinearLayout>
+
+=============================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <GridView
+        android:id="@+id/simpleGridView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:numColumns="3" />
+</LinearLayout>
+
+=============================================================================================
+
+MainActivity.java:
+
+package com.vedro.baseadapter;
+
+import android.content.Context;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
+import android.widget.ImageView;
+
+class CustomAdapter extends BaseAdapter {
+    Context context;
+    int animals[];
+    LayoutInflater inf;
+
+    public CustomAdapter(Context applicationContext, int[] animals) {
+        this.context = applicationContext;
+        this.animals = animals;
+        inf = (LayoutInflater.from(applicationContext));
+    }
+
+    @Override
+    public int getCount() {
+        return animals.length;
+    }
+
+    @Override
+    public Object getItem(int i) {
+        return null;
+    }
+
+    @Override
+    public long getItemId(int i) {
+        return 0;
+    }
+
+    @Override
+    public View getView(int i, View view, ViewGroup viewGroup) {
+        view = inf.inflate(R.layout.my_item, null);
+        ImageView icon = (ImageView) view.findViewById(R.id.icon);
+        icon.setImageResource(animals[i]);
+        return view;
+    }
+}
+
+public class MainActivity extends AppCompatActivity {
+
+    GridView simpleGrid;
+    int animals[] = {R.drawable.enot, R.drawable.rain, R.drawable.pikachu, R.drawable.rain, R.drawable.pikachu, R.drawable.bulbasaur, R.drawable.bulbasaur, R.drawable.enot, R.drawable.rain};
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        simpleGrid = findViewById(R.id.simpleGridView);
+        CustomAdapter customAdapter = new CustomAdapter(getApplicationContext(), animals);
+        simpleGrid.setAdapter(customAdapter);
+    }
+}
