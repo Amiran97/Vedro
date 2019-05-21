@@ -1,0 +1,120 @@
+MainActivity.java:
+
+package com.vedro.gallery;
+
+import android.content.Context;
+import android.content.res.TypedArray;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.BaseAdapter;
+import android.widget.Gallery;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+public class MainActivity extends AppCompatActivity {
+
+    Integer[] imageIDs = {
+            R.drawable.pikachu,
+            R.drawable.enot,
+            R.drawable.bulbasaur,
+            R.drawable.love,
+            R.drawable.comments,
+            R.drawable.rain
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // Gallery view is deprecated from Android 4.1 !!!
+        Gallery gallery = (Gallery) findViewById(R.id.gallery1);
+        gallery.setAdapter(new ImageAdapter(this));
+        gallery.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                Toast.makeText(getBaseContext(), getResources().getResourceEntryName(imageIDs[position]) + "",
+                        Toast.LENGTH_SHORT).show();
+
+                ImageView imageView = (ImageView) findViewById(R.id.image1);
+                imageView.setImageResource(imageIDs[position]);
+            }
+        });
+    }
+
+    public class ImageAdapter extends BaseAdapter {
+        private Context context;
+        private int itemBackground;
+
+        public ImageAdapter(Context c) {
+            context = c;
+
+            // https://developer.android.com/training/custom-views/create-view.html
+
+            // http://ru-code-android.blogspot.com/2012/05/blog-post.html
+
+            // Для представления галереи в android есть предопределенный стиль, который рисует для
+            // каждого элемента серую рамку (для выделенного — светло-серую). Называется стиль
+            // galleryItemBackground. Чтобы задать фон или стиль в программе используется
+            // идентификатор типа R.drawable.image, причем image должен лежать в директории
+            // /res/drawable проекта. Стиль galleryItemBackground является системным.
+            TypedArray a = obtainStyledAttributes(R.styleable.MyGallery);
+            itemBackground = a.getResourceId(R.styleable.MyGallery_android_galleryItemBackground, 0);
+            a.recycle();
+        }
+
+        public int getCount() {
+            return imageIDs.length;
+        }
+
+        public Object getItem(int position) {
+            return position;
+        }
+
+        public long getItemId(int position) {
+            return position;
+        }
+
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ImageView imageView = new ImageView(context);
+            imageView.setImageResource(imageIDs[position]);
+            imageView.setLayoutParams(new Gallery.LayoutParams(200, 200));
+            imageView.setBackgroundResource(itemBackground);
+            return imageView;
+        }
+    }
+}
+
+============================================================================================
+
+activity_main.xml:
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <Gallery
+        android:id="@+id/gallery1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFF"
+        android:padding="10dp" />
+
+    <ImageView
+        android:id="@+id/image1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal"
+        android:background="#FFF"
+        android:paddingBottom="5dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="5dp"
+        android:src="@drawable/pikachu" />
+</LinearLayout>
