@@ -1,0 +1,117 @@
+MainActivity.java:
+
+package com.vedro.contacts;
+
+import android.Manifest;
+import android.content.ContentResolver;
+import android.database.Cursor;
+import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+
+    public ListView list;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // https://github.com/Karumi/Dexter
+        Dexter.withActivity(this)
+                .withPermissions(Manifest.permission.READ_CONTACTS,
+                        Manifest.permission.WRITE_CONTACTS)
+                .withListener(new MultiplePermissionsListener() {
+                    @Override
+                    public void onPermissionsChecked(MultiplePermissionsReport report) {
+                        list = findViewById(R.id.list);
+
+                        ArrayList<String> info = new ArrayList<>();
+
+                        ArrayAdapter<String> adapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_list_item_1, info);
+                        list.setAdapter(adapter);
+
+                        ContentResolver cr = getContentResolver();
+                        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
+                                null, null, null, null);
+
+                        if (cur.getCount() > 0) {
+                            while (cur.moveToNext()) {
+                                String id = cur.getString(
+                                        cur.getColumnIndex(ContactsContract.Contacts._ID));
+                                String name = cur.getString(cur.getColumnIndex(
+                                        ContactsContract.Contacts.DISPLAY_NAME));
+
+                                if (cur.getInt(cur.getColumnIndex(
+                                        ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
+                                    Cursor pCur = cr.query(
+                                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                                            null,
+                                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                                            new String[]{id}, null);
+                                    while (pCur.moveToNext()) {
+                                        String phoneNo = pCur.getString(pCur.getColumnIndex(
+                                                ContactsContract.CommonDataKinds.Phone.NUMBER));
+                                        info.add(0, name + ": " + phoneNo);
+                                        adapter.notifyDataSetChanged();
+
+                                    }
+                                    pCur.close();
+                                }
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
+
+                    }
+                }).check();
+    }
+}
+
+==================================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</LinearLayout>
+
+==================================================================================================================================
+
+AndroidManifest.xml:
+
+...
+<uses-permission android:name="android.permission.READ_CONTACTS" />
+<uses-permission android:name="android.permission.WRITE_CONTACTS" />
+...
+
+==================================================================================================================================
+
+build.gradle (Module:app):
+
+dependencies {
+    ...
+    implementation 'com.karumi:dexter:5.0.0'
+    ...
+}
