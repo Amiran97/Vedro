@@ -1,0 +1,76 @@
+my_item.xml:
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/linearLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/img1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <CheckBox
+        android:id="@+id/cb1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Знает Android?" />
+
+    <TextView
+        android:id="@+id/t1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="15dp"
+        android:text="name" />
+
+</LinearLayout>
+
+==================================================================================================
+
+MainActivity.java:
+
+package com.vedro.adapters;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        ListView people = findViewById(R.id.list);
+
+        String[] names = {"Александр Загоруйко", "Игорь Савченко", "Владислав Ников"};
+
+        boolean[] checked = {false, true, true};
+
+        int pic = R.drawable.enot;
+
+        ArrayList<HashMap<String, Object>> al = new ArrayList<>(names.length);
+        HashMap<String, Object> map;
+
+        String[] from = {"photo", "name", "check"};
+        int[] to = {R.id.img1, R.id.t1, R.id.cb1};
+
+        for (int i = 0; i < names.length; i++) {
+            map = new HashMap<>();
+            map.put(from[0], pic);
+            map.put(from[1], names[i]);
+            map.put(from[2], checked[i]);
+            al.add(map);
+        }
+
+        SimpleAdapter adapter = new SimpleAdapter(this, al, R.layout.my_item, from, to);
+
+        people.setAdapter(adapter);
+    }
+}
