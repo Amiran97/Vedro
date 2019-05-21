@@ -1,0 +1,45 @@
+package com.vedro.simpleadapter;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        ListView people = findViewById(R.id.list);
+
+        ArrayList<HashMap<String, String>> al = new ArrayList<>();
+        HashMap<String, String> map;
+
+        map = new HashMap<>();
+        map.put("name", "Иван Иванов");
+        map.put("phone", "+38 063 03 000 35");
+        al.add(map);
+
+        map = new HashMap<>();
+        map.put("name", "Михаил Курикин");
+        map.put("phone", "+38 050 666 00 50");
+        al.add(map);
+
+        map = new HashMap<>();
+        map.put("name", "Вероника Нормальная");
+        map.put("phone", "+38 067 67 11 777");
+        al.add(map);
+
+        SimpleAdapter adapter = new SimpleAdapter(this, al, android.R.layout.simple_list_item_2,
+                new String[]{"name", "phone"},
+                new int[]{android.R.id.text1, android.R.id.text2});
+
+        people.setAdapter(adapter);
+
+    }
+}
