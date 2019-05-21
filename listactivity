@@ -1,0 +1,99 @@
+res / layout / my_item.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="5dp">
+
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_marginLeft="5px"
+        android:layout_marginRight="20px"
+        android:layout_marginTop="5px"
+        android:src="@drawable/pikachu" />
+
+    <TextView
+        android:id="@+id/label"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:gravity="center_vertical"
+        android:text="@+id/label"
+        android:textSize="40dp" />
+
+</LinearLayout>
+
+=================================================================================================
+
+MainActivity.java:
+
+package com.vedro.adapters;
+
+import android.app.ListActivity;
+import android.content.Context;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+class MyArrayAdapter extends ArrayAdapter<String> {
+    private final Context context;
+    private final String[] values;
+
+    public MyArrayAdapter(Context context, String[] values) {
+        super(context, R.layout.my_item, values);
+        this.context = context;
+        this.values = values;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        LayoutInflater inflater = (LayoutInflater) context
+                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        View rowView = inflater.inflate(R.layout.my_item, parent, false);
+        TextView textView = (TextView) rowView.findViewById(R.id.label);
+        ImageView imageView = (ImageView) rowView.findViewById(R.id.logo);
+        textView.setText(values[position]);
+
+        String s = values[position];
+
+        if (s.equals("enot")) {
+            imageView.setImageResource(R.drawable.enot);
+        } else if (s.equals("pikachu")) {
+            imageView.setImageResource(R.drawable.pikachu);
+        } else if (s.equals("bulbasaur")) {
+            imageView.setImageResource(R.drawable.bulbasaur);
+        } else {
+            imageView.setImageResource(R.drawable.rain);
+        }
+
+        return rowView;
+    }
+}
+
+public class MainActivity extends ListActivity {
+
+    static final String[] items =
+            new String[]{"rain", "enot", "pikachu", "bulbasaur"};
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setListAdapter(new MyArrayAdapter(this, items));
+    }
+
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        String selectedValue = (String) getListAdapter().getItem(position);
+        Toast.makeText(this, selectedValue, Toast.LENGTH_SHORT).show();
+    }
+}
