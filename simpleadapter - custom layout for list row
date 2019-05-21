@@ -32,7 +32,7 @@ res / layout / my_item.xml:
 
 MainActivity.java:
 
-package com.alex.adapters;
+package com.vedro.adapters;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
