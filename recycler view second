@@ -1,0 +1,204 @@
+MainActivity.java:
+
+package com.vedro.recyclerview;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+    private List<Movie> list = new ArrayList<>();
+    private MoviesAdapter a;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        RecyclerView rv = findViewById(R.id.my_recycler_view);
+
+        a = new MoviesAdapter(list);
+        RecyclerView.LayoutManager lm = new LinearLayoutManager(getApplicationContext());
+        rv.setLayoutManager(lm);
+        rv.setItemAnimator(new DefaultItemAnimator());
+        rv.setAdapter(a);
+
+        prepareMovieData();
+    }
+
+    private void prepareMovieData() {
+
+        Movie movie = new Movie("Крёстный отец", "детектив, драма", "1972");
+        list.add(movie);
+
+        movie = new Movie("Криминальное чтиво", "детектив, драма", "1994");
+        list.add(movie);
+
+        movie = new Movie("Бойцовский клуб", "драма", "1999");
+        list.add(movie);
+
+        movie = new Movie("Очень плохая училка", "комедия", "2011");
+        list.add(movie);
+
+        movie = new Movie("Достучаться до небес", "драма, комедия, криминал", "1997");
+        list.add(movie);
+        
+        movie = new Movie("Матрица", "боевик, научная фантастика", "1999");
+        list.add(movie);
+
+        movie = new Movie("Танцующая в темноте", "мьюзикл, драма", "2000");
+        list.add(movie);
+
+        movie = new Movie("Огни большого города", "комедия, драма, мелодрама", "1931");
+        list.add(movie);
+
+        movie = new Movie("Амели", "мелодрама, комедия", "2001");
+        list.add(movie);
+        
+        movie = new Movie("Терминатор 2: Судный день", "боевик, научная фантастика, триллер", "1991");
+        list.add(movie);
+
+        a.notifyDataSetChanged();
+    }
+}
+
+==================================================================================================================
+
+Movie.java:
+
+package com.vedro.recyclerview;
+
+class Movie {
+
+    private String title, genre, year;
+
+    Movie(String title, String genre, String year) {
+        setTitle(title);
+        setGenre(genre);
+        setYear(year);
+    }
+
+    String getTitle() {
+        return title;
+    }
+
+    void setTitle(String name) {
+        this.title = name;
+    }
+
+    String getYear() {
+        return year;
+    }
+
+    void setYear(String year) {
+        this.year = year;
+    }
+
+    String getGenre() {
+        return genre;
+    }
+
+    void setGenre(String genre) {
+        this.genre = genre;
+    }
+}
+
+==================================================================================================================
+
+MoviesAdapter.java:
+
+package com.vedro.recyclerview;
+
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import java.util.List;
+
+class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MyViewHolder> {
+
+    private List<Movie> moviesList;
+
+    class MyViewHolder extends RecyclerView.ViewHolder {
+        TextView title;
+        TextView year;
+        TextView genre;
+
+        MyViewHolder(View view) {
+            super(view);
+            title = view.findViewById(R.id.title);
+            genre = view.findViewById(R.id.genre);
+            year = view.findViewById(R.id.year);
+        }
+    }
+
+    MoviesAdapter(List<Movie> moviesList) {
+        this.moviesList = moviesList;
+    }
+
+    @Override
+    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View itemView = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.my_item, parent, false);
+
+        return new MyViewHolder(itemView);
+    }
+
+    @Override
+    public void onBindViewHolder(MyViewHolder holder, int position) {
+        Movie movie = moviesList.get(position);
+        holder.title.setText(movie.getTitle());
+        holder.genre.setText(movie.getGenre());
+        holder.year.setText(movie.getYear());
+    }
+
+    @Override
+    public int getItemCount() {
+        return moviesList.size();
+    }
+}
+
+==================================================================================================================
+
+my_item.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:paddingBottom="10dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingTop="10dp">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:textSize="16dp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/genre"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title" />
+
+    <TextView
+        android:id="@+id/year"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true" />
+
+</RelativeLayout>
