@@ -1,0 +1,153 @@
+MainActivity.java:
+
+package com.vedro.recyclerview;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        String[] myDataset = getDataSet();
+
+        RecyclerView rv = findViewById(R.id.my_recycler_view);
+
+        // если есть уверенность, что изменения в контенте не изменят размер
+        // лэяута, то можно выставить true - это увеличивает производительность
+        rv.setHasFixedSize(true);
+
+        // назначение лэяут-менеджера
+        RecyclerView.LayoutManager lm = new LinearLayoutManager(this);
+        // lm = new GridLayoutManager(this, 2); // 2 столбика
+        rv.setLayoutManager(lm);
+        // назначение адаптера
+        RecyclerView.Adapter a = new RecyclerAdapter(myDataset);
+        rv.setAdapter(a);
+    }
+
+    private String[] getDataSet() {
+        int rowCount = 50;
+        String[] mDataSet = new String[rowCount];
+        for (int i = 0; i < rowCount; i++) {
+            mDataSet[i] = "пункт №" + i;
+        }
+        return mDataSet;
+    }
+}
+
+===================================================================================
+
+(package - add - new - java class)
+RecyclerAdapter.java:
+
+package com.vedro.recyclerview;
+
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHolder> {
+
+    private String[] mDataset;
+
+    // вьюхолдер будет хранить ссылку сформировавшиеся макеты пунктов списка
+    static class ViewHolder extends RecyclerView.ViewHolder {
+
+        // пункт состоит только из одного TextView
+        // если будут другие элементы, их нужно оформить как поля этого класса
+        TextView mTextView;
+
+        ViewHolder(View v) {
+            super(v);
+            mTextView = (TextView) v.findViewById(R.id.tv_recycler_item);
+        }
+    }
+
+    RecyclerAdapter(String[] dataset) {
+        mDataset = dataset;
+    }
+
+    // создание новых вьюшек (вызывается лэяут-менеджером)
+    @Override
+    public RecyclerAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.recycler_item, parent, false);
+
+        return new ViewHolder(v);
+    }
+
+    // замена контента отдельной вьюшки (вызывается лэяут-менеджером)
+    @Override
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        holder.mTextView.setText(mDataset[position]);
+    }
+
+    // определение количества пунктов списка
+    @Override
+    public int getItemCount() {
+        return mDataset.length;
+    }
+}
+
+===================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".MainActivity"
+    tools:showIn="@layout/activity_main">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/my_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical" />
+
+</RelativeLayout>
+
+==========================================================================================
+
+res \ layout \ recycler_item.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_recycler_item"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="7dp"
+        android:layout_marginTop="10dp"
+        android:textSize="18sp" />
+
+</LinearLayout>
+
+======================================================================================
+
+build.gradle (Module:app):
+
+dependencies {
+    ...
+    implementation 'com.android.support:recyclerview-v7:27.0.0'
+    implementation 'com.android.support:design:27.0.0'
+    implementation 'com.android.support:support-v4:27.0.0'
+}
