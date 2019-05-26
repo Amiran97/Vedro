@@ -1,0 +1,246 @@
+// DEFAULT VIBRATION EXAMPLE (please, reinstall application!)
+// https://stackoverflow.com/questions/46402510/notification-vibrate-issue-for-android-8-0
+
+package com.vedro.notifications;
+
+import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.BitmapFactory;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.NotificationCompat;
+import android.view.View;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void onClick(View view) {
+
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationCompat.Builder builder;
+
+        Context context = getApplicationContext();
+        Resources res = context.getResources();
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+
+            String CHANNEL_ID = "vedro_channel";
+
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "VedroChannel",
+                    NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription("Vedro channel description");
+            channel.enableVibration(true); // <<< IMPORTANT 
+            channel.setSound(null, null); // <<< IMPORTANT 
+            manager.createNotificationChannel(channel);
+
+            builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+        }
+        else
+        {
+            builder = new NotificationCompat.Builder(context);
+        }
+
+        // OPEN SOME WEB PAGE:
+        PendingIntent action = PendingIntent.getActivity(context,
+                0, new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/Prosto_Amiran")),
+                PendingIntent.FLAG_CANCEL_CURRENT); // Flag indicating that if the described PendingIntent already exists, the current one should be canceled before generating a new one.
+
+        builder.setContentIntent(action)
+                .setContentTitle("Notification Title")
+                .setContentText("Notification Text")
+                .setTicker("Opening Telegram...")
+                .setContentIntent(action)
+                .setDefaults(Notification.DEFAULT_VIBRATE) // двойная короткая
+                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_announcement_black_24dp))
+                .setSmallIcon(R.drawable.ic_announcement_black_24dp);
+
+        Notification notification = builder.build();
+
+        manager.notify(101, notification);
+
+        // удаление оповещения
+        // notificationManager.cancel(NOTIFY_ID);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// DEFAULT ALARM CLOCK EXAMPLE (please, reinstall application!)
+
+package com.vedro.notifications;
+
+import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.BitmapFactory;
+import android.media.AudioAttributes;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.NotificationCompat;
+import android.view.View;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void onClick(View view) {
+
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationCompat.Builder builder;
+
+        Context context = getApplicationContext();
+        Resources res = context.getResources();
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+
+            String CHANNEL_ID = "vedro_channel";
+
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "VedroChannel",
+                    NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription("Vedro channel description");
+
+            // ALARMCLOCK SETTINGS FOR CHANNEL:
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE).build();
+            channel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM), audioAttributes);
+
+            manager.createNotificationChannel(channel);
+
+            builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+        }
+        else
+        {
+            builder = new NotificationCompat.Builder(context);
+        }
+        
+        PendingIntent action = PendingIntent.getActivity(context,
+                0, new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/Prosto_Amiran")),
+                PendingIntent.FLAG_CANCEL_CURRENT); // Flag indicating that if the described PendingIntent already exists, the current one should be canceled before generating a new one.
+
+        builder.setContentIntent(action)
+                .setContentTitle("Notification Title")
+                .setContentText("Notification Text")
+                .setTicker("Opening Telegram...")
+                .setContentIntent(action)
+                // code for old android versions
+                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)) // запустится рингтон будильника!
+                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_announcement_black_24dp))
+                .setSmallIcon(R.drawable.ic_announcement_black_24dp);
+
+        Notification notification = builder.build();
+
+        manager.notify(101, notification);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// CUSTOM MP3 PLAYING EXAMPLE (please, reinstall application!)
+
+package com.vedro.notifications;
+
+import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.BitmapFactory;
+import android.media.AudioAttributes;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.NotificationCompat;
+import android.view.View;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void onClick(View view) {
+
+        Uri soundUri = Uri.parse(Environment.getExternalStorageDirectory().toString() + "/Music/Cola.mp3");
+
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationCompat.Builder builder;
+
+        Context context = getApplicationContext();
+        Resources res = context.getResources();
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+
+            String CHANNEL_ID = "vedro_channel";
+
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "VedroChannel",
+                    NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription("Vedro channel description");
+
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                    .build();
+            channel.setSound(soundUri, audioAttributes);
+
+            manager.createNotificationChannel(channel);
+
+            builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+        }
+        else
+        {
+            builder = new NotificationCompat.Builder(context);
+        }
+
+        // OPEN SOME WEB PAGE:
+        PendingIntent action = PendingIntent.getActivity(context,
+                0, new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/Prosto_Amiran")),
+                PendingIntent.FLAG_CANCEL_CURRENT); // Flag indicating that if the described PendingIntent already exists, the current one should be canceled before generating a new one.
+
+        builder.setContentIntent(action)
+                .setContentTitle("Notification Title")
+                .setContentText("Notification Text")
+                .setTicker("Opening Telegram...")
+                .setContentIntent(action)
+                // for old android versions
+                .setSound(soundUri)
+                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_announcement_black_24dp))
+                .setSmallIcon(R.drawable.ic_announcement_black_24dp);
+
+        Notification notification = builder.build();
+
+        manager.notify(101, notification);
+    }
+}
