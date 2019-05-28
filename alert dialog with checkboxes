@@ -1,0 +1,54 @@
+package com.vedro.dialogs;
+
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
+import android.widget.Toast;
+
+public class VedroDialog extends DialogFragment {
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+        final String[] pokemons = {"Пикачу", "Бульбазавр", "Чармандер", "Мяут"};
+        final boolean[] checkedItems = {true, false, false, false};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Выберите своих покемонов:")
+                .setIcon(R.drawable.pikachu)
+                .setCancelable(false)
+                .setMultiChoiceItems(pokemons, checkedItems,
+                        new DialogInterface.OnMultiChoiceClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int which, boolean isChecked) {
+                                checkedItems[which] = isChecked;
+                                if (isChecked)
+                                    Toast.makeText(getActivity(), pokemons[which] + ", я выбираю тебя!",
+                                            Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                .setPositiveButton("Готово",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                StringBuilder state = new StringBuilder();
+                                for (int i = 0; i < pokemons.length; i++) {
+                                    state.append("" + pokemons[i]);
+                                    if (checkedItems[i]) state.append(" выбран\n");
+                                    else state.append(" не выбран\n");
+                                }
+                                Toast.makeText(getActivity(), state.toString(), Toast.LENGTH_LONG).show();
+                            }
+                        })
+
+                .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        });
+        return builder.create();
+    }
+}
