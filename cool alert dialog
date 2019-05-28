@@ -1,0 +1,45 @@
+VedroDialog.java:
+
+package com.vedro.dialogs;
+
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
+import android.widget.Toast;
+
+public class VedroDialog extends DialogFragment {
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Очень важное сообщение!")
+                .setIcon(R.drawable.enot)
+                .setMessage("Срочно покормите енота!")
+                .setPositiveButton("Будет сделано!", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        Toast.makeText(getActivity().getApplicationContext(), "кормим енота вкусняшками", Toast.LENGTH_SHORT).show(); 
+                    }
+                })
+                .setNegativeButton("Он не голодный!", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        Toast.makeText(getActivity().getApplicationContext(), "отмена работы с диалогом", Toast.LENGTH_SHORT).show(); 
+                    }
+                });
+
+        return builder.create();
+    }
+}
+
+==============================================================================================================================
+
+MainActivity.java:
+
+...
+public void onClick(View v) {
+    VedroDialog d = new VedroDialog();
+    d.show(getSupportFragmentManager(), "dialog");
+}
+...
