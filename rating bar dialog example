@@ -40,7 +40,7 @@ public class VedroDialog extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        final VedroDialog.Builder ratingdialog = new VedroDialog.Builder(getActivity());
+        final AlertDialog.Builder ratingdialog = new AlertDialog.Builder(getActivity());
 
         ratingdialog.setIcon(android.R.drawable.btn_star_big_on);
         ratingdialog.setTitle("Нравится ли Вам это приложение?");
