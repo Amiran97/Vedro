@@ -1,0 +1,65 @@
+package com.vedro.dialogs;
+
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.view.KeyEvent;
+import android.widget.Toast;
+
+public class VedroDialog extends DialogFragment {
+
+    @Override
+    public void onCancel(DialogInterface dialog) {
+        super.onCancel(dialog);
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setSubtitle("Тап за пределами диалога");
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        super.onDismiss(dialog);
+        if (getActivity() != null)
+            Toast.makeText(getActivity(), "Диалог закрылся...", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Внимание, вопрос!")
+                .setIcon(R.drawable.pikachu)
+                .setMessage("Это что за покемон?")
+                .setPositiveButton("Пикачу", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        ((AppCompatActivity) getActivity()).getSupportActionBar().setSubtitle("Правильно!");
+                    }
+                })
+                .setNegativeButton("Чармандер", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        ((AppCompatActivity) getActivity()).getSupportActionBar().setSubtitle("Не угадал...");
+                    }
+                })
+                .setNeutralButton("Бульбазавр", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        ((AppCompatActivity) getActivity()).getSupportActionBar().setSubtitle("Нет, это не он...");
+                    }
+                })
+                .setOnKeyListener(new Dialog.OnKeyListener() {
+                    @Override
+                    public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                        if (keyCode == KeyEvent.KEYCODE_BACK) {
+                            Toast.makeText(getActivity(), "Вы нажали Back!",
+                                    Toast.LENGTH_SHORT).show();
+                            dialog.cancel();
+
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+
+        return builder.create();
+    }
+}
