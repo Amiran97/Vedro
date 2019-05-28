@@ -1,0 +1,110 @@
+MainActivity.java:
+
+package com.vedro.dialogs;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void click(View view) {
+        VedroDialog d = new VedroDialog();
+        d.show(getSupportFragmentManager(), "dialog");
+    }
+}
+
+==============================================================================================================
+
+VedroDialog.java:
+
+package com.vedro.dialogs;
+
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
+import android.view.View;
+import android.widget.RatingBar;
+import android.widget.Toast;
+
+public class VedroDialog extends DialogFragment {
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+        final VedroDialog.Builder ratingdialog = new VedroDialog.Builder(getActivity());
+
+        ratingdialog.setIcon(android.R.drawable.btn_star_big_on);
+        ratingdialog.setTitle("Нравится ли Вам это приложение?");
+
+        // https://android.jlelse.eu/centering-views-in-android-layouts-547930621de7
+        View ll = getActivity().getLayoutInflater().inflate(R.layout.my_item, null);
+        ratingdialog.setView(ll);
+
+        final RatingBar rating = ll.findViewById(R.id.rb1);
+
+        ratingdialog.setPositiveButton("ДА!",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        Toast.makeText(getActivity(), rating.getRating() + "", Toast.LENGTH_SHORT).show();
+                    }
+                })
+
+                .setNegativeButton("НЕТ...",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        });
+
+        return ratingdialog.create();
+    }
+}
+
+==============================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/b1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:onClick="click"
+        android:text="show dialog" />
+</RelativeLayout>
+
+==============================================================================================================
+
+my_item.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RatingBar
+        android:id="@+id/rb1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_gravity="center"
+        android:clickable="true"
+        android:focusable="true"
+        android:numStars="5"
+        android:rating="3"
+        android:stepSize="1.0" />
+</RelativeLayout>
