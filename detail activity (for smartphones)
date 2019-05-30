@@ -1,0 +1,42 @@
+DetailActivity.java:
+
+package com.vedro.fragments;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+
+public class DetailActivity extends AppCompatActivity {
+
+    public static final String EXTRA_ANIMAL = "id";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_detail);
+        AnimalDetailFragment adf = (AnimalDetailFragment) getSupportFragmentManager().findFragmentById(R.id.detail_frag);
+        int animalId = (int) getIntent().getExtras().get(EXTRA_ANIMAL);
+        adf.setAnimal(animalId);
+    }
+}
+
+=================================================================================================================================
+
+activity_detail.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/activity_detail"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="20dp"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:paddingTop="20dp">
+
+    <fragment
+        android:id="@+id/detail_frag"
+        class="com.vedro.fragments.AnimalDetailFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</RelativeLayout>
