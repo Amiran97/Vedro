@@ -1,0 +1,36 @@
+MainActivity.java:
+
+package com.vedro.fragments;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        AnimalDetailFragment frag = (AnimalDetailFragment) getSupportFragmentManager().findFragmentById(R.id.detail_frag);
+        frag.setAnimal(1);
+    }
+}
+
+==================================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <fragment
+        android:id="@+id/detail_frag"
+        class="com.vedro.fragments.AnimalDetailFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</LinearLayout>
