@@ -1,0 +1,27 @@
+import android.widget.ListView;
+import android.content.Context;
+
+// ...
+// ...
+
+    interface AnimalListListener {
+        void itemClicked(long id);
+    }
+
+    private AnimalListListener listener;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        if (context instanceof AnimalListListener) {
+            listener = (AnimalListListener) context;
+        }
+    }
+
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        if (listener != null) {
+            listener.itemClicked(id);
+        }
+    }
