@@ -1,0 +1,20 @@
+import android.widget.ImageView;
+import android.widget.TextView;
+
+// ...
+// ...
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        View view = getView(); // ссылка на родительский макет фрагмента
+        if (view != null) {
+            TextView title = (TextView) view.findViewById(R.id.textTitle); // обращаться напрямую к вьюшкам фрагмент не может
+            Animal animal = Animal.animals[animalId];
+            title.setText(animal.getName());
+            TextView description = (TextView) view.findViewById(R.id.textDescription);
+            description.setText(animal.getDescription());
+            ImageView img = (ImageView) view.findViewById(R.id.picture);
+            img.setImageResource(animal.getId());
+        }
+    }
