@@ -1,0 +1,61 @@
+res \ anim \ fadeout.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <alpha android:duration="3000"
+    android:fromAlpha="1.0"
+    android:toAlpha="0.0" />
+</set>
+
+===============================================================================================
+
+MainActivity.java:
+
+package com.vedro.animation;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
+
+public class MainActivity extends AppCompatActivity {
+
+    private Animation fadeOut;
+
+    public void animate(View v) {
+        findViewById(R.id.img).startAnimation(fadeOut);
+    }
+
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        fadeOut = AnimationUtils.loadAnimation(this, R.anim.fadeout);
+    }
+}
+
+===============================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:onClick="animate"
+        android:text="Start Animation!" />
+
+    <ImageView
+        android:id="@+id/img"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:src="@drawable/bulbasaur" />
+
+</LinearLayout>
