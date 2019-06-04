@@ -1,0 +1,143 @@
+MainActivity.java:
+
+package com.vedro.animation;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ViewFlipper;
+
+public class MainActivity extends AppCompatActivity {
+
+    ViewFlipper flipper;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        flipper = findViewById(R.id.viewFlipper1);
+        flipper.setFlipInterval(1500);
+    }
+
+    public void flipByClick(View v) {
+        if (flipper.isFlipping()) {
+            flipper.stopFlipping();
+        }
+        flipper.showNext();
+    }
+
+    public void flipByInterval(View v) {
+        if (!flipper.isFlipping()) {
+            flipper.showNext();
+            flipper.startFlipping();
+        }
+    }
+}
+
+================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/flipbyinterval"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="0.5"
+            android:onClick="flipByInterval"
+            android:text="автомат" />
+
+        <Button
+            android:id="@+id/flipbyclick"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="0.5"
+            android:onClick="flipByClick"
+            android:text="вручную" />
+    </LinearLayout>
+
+    <ViewFlipper
+        android:id="@+id/viewFlipper1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:flipInterval="1500"
+        android:inAnimation="@anim/in"
+        android:outAnimation="@anim/out">
+
+        <ImageView
+            android:id="@+id/imageView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/avers" />
+
+        <ImageView
+            android:id="@+id/imageView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/bulbasaur" />
+
+        <ImageView
+            android:id="@+id/imageView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/mario" />
+
+        <ImageView
+            android:id="@+id/imageView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/piano" />
+
+        <ImageView
+            android:id="@+id/imageView5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/revers" />
+
+    </ViewFlipper>
+</LinearLayout>
+
+================================================================================
+
+in.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:anim/decelerate_interpolator">
+    <translate
+        android:duration="500"
+        android:fromXDelta="100%"
+        android:toXDelta="0%" />
+</set>
+
+================================================================================
+
+out.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:anim/decelerate_interpolator">
+    <translate
+        android:duration="500"
+        android:fromXDelta="0%"
+        android:toXDelta="-100%" />
+</set>
