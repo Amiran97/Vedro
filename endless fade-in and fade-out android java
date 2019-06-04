@@ -1,0 +1,68 @@
+package com.vedro.animation;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
+
+public class MainActivity extends AppCompatActivity {
+
+    private ImageView i;
+    private Animation fadeIn, fadeOut;
+
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        i = findViewById(R.id.img);
+
+        // подключаем файлы анимации
+        fadeIn = AnimationUtils.loadAnimation(this, R.anim.fadein);
+        fadeOut = AnimationUtils.loadAnimation(this, R.anim.fadeout);
+        fadeIn.setAnimationListener(fil);
+        fadeOut.setAnimationListener(fol);
+
+        i.startAnimation(fadeOut);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        i.clearAnimation();
+    }
+
+    Animation.AnimationListener fol = new Animation.AnimationListener() {
+
+        @Override
+        public void onAnimationEnd(Animation animation) {
+            i.startAnimation(fadeIn);
+        }
+
+        @Override
+        public void onAnimationRepeat(Animation animation) {
+
+        }
+
+        @Override
+        public void onAnimationStart(Animation animation) {
+
+        }
+    };
+
+    Animation.AnimationListener fil = new Animation.AnimationListener() {
+        @Override
+        public void onAnimationEnd(Animation animation) {
+            i.startAnimation(fadeOut);
+        }
+
+        @Override
+        public void onAnimationRepeat(Animation animation) {
+
+        }
+
+        @Override
+        public void onAnimationStart(Animation animation) {
+
+        }
+    };
+}
