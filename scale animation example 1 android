@@ -1,0 +1,74 @@
+MainActivity.java:
+
+package com.vedro.animation;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
+
+public class MainActivity extends AppCompatActivity {
+
+    private ImageView iv;
+    private Animation anim;
+
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        iv = findViewById(R.id.img);
+        anim = AnimationUtils.loadAnimation(this, R.anim.scale);
+        iv.startAnimation(anim);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        iv.clearAnimation();
+    }
+}
+
+=============================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/img"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal|center_vertical"
+        android:src="@drawable/tina" />
+
+</LinearLayout>
+
+=============================================================================================================
+
+res \ anim \ scale.xml:
+
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <scale
+        android:duration="100"
+        android:fromXScale="0.9"
+        android:fromYScale="0.9"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:repeatCount="infinite"
+        android:repeatMode="reverse"
+        android:toXScale="1.1"
+        android:toYScale="1.1" />
+
+</set>
+
+=============================================================================================================
+
+drawable:
+
+tina.jpg
