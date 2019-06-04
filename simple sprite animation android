@@ -1,0 +1,101 @@
+package com.vedro.animation;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Rect;
+import android.os.Handler;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+
+import java.util.Random;
+
+class Sprite {
+    // direction = 0 up, 1 left, 2 down, 3 right,
+    // animation = 3 back, 1 left, 0 front, 2 right
+    int[] DIRECTION_TO_ANIMATION_MAP = {3, 1, 0, 2};
+    private static final int BMP_ROWS = 4;
+    private static final int BMP_COLUMNS = 3;
+    private int x;
+    private int y;
+    private int xSpeed;
+    private GameView gameView;
+    private Bitmap bmp;
+    private int currentFrame = 0;
+    private int width;
+    private int height;
+    private int ySpeed;
+
+    public Sprite(GameView gameView, Bitmap bmp) {
+        this.width = bmp.getWidth() / BMP_COLUMNS;
+        this.height = bmp.getHeight() / BMP_ROWS;
+        this.gameView = gameView;
+        this.bmp = bmp;
+
+        Random rnd = new Random(System.currentTimeMillis());
+        xSpeed = rnd.nextInt(15) + 1;
+        ySpeed = rnd.nextInt(15) + 1;
+    }
+
+    private void update() {
+        if (x >= gameView.getWidth() - width - xSpeed || x + xSpeed <= 0) {
+            xSpeed = -xSpeed;
+        }
+        x = x + xSpeed;
+        if (y >= gameView.getHeight() - height - ySpeed || y + ySpeed <= 0) {
+            ySpeed = -ySpeed;
+        }
+        y = y + ySpeed;
+        currentFrame = ++currentFrame % BMP_COLUMNS;
+    }
+
+    public void onDraw(Canvas canvas) {
+        update();
+        int srcX = currentFrame * width;
+        int srcY = getAnimationRow() * height;
+        canvas.drawBitmap(bmp, new Rect(srcX, srcY, srcX + width, srcY + height), new Rect(x, y, x + width, y + height), null);
+    }
+
+    // direction = 0 up, 1 left, 2 down, 3 right,
+    // animation = 3 back, 1 left, 0 front, 2 right
+    private int getAnimationRow() {
+        return DIRECTION_TO_ANIMATION_MAP[(int) Math.round((Math.atan2(xSpeed, ySpeed) / (Math.PI / 2) + 2)) % BMP_ROWS];
+    }
+}
+
+class GameView extends View {
+    private Sprite sprite;
+
+    public GameView(Context context) {
+        super(context);
+        sprite = new Sprite(this, BitmapFactory.decodeResource(getResources(), R.drawable.bad1));
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        canvas.drawColor(Color.BLACK); // заливка экрана чёрным (иначе будет белый)
+        sprite.onDraw(canvas);
+    }
+}
+
+public class MainActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        final GameView gv = new GameView(this);
+        setContentView(gv);
+
+        gv.setWillNotDraw(false); // для возможности вызова onDraw через invalidate
+        final Handler h = new Handler();
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                gv.invalidate();
+                h.postDelayed(this, 100);
+            }
+        });
+    }
+}
