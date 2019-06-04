@@ -1,0 +1,43 @@
+package com.vedro.graphics;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+
+import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.utils.ColorTemplate;
+
+import java.util.ArrayList;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        ArrayList<BarEntry> entries = new ArrayList<>();
+        entries.add(new BarEntry(26.48f, 0));
+        entries.add(new BarEntry(26.12f, 1));
+        entries.add(new BarEntry(26.07f, 2));
+        entries.add(new BarEntry(25.80f, 3));
+        entries.add(new BarEntry(26.40f, 4));
+        entries.add(new BarEntry(27.00f, 5));
+        BarDataSet dataset = new BarDataSet(entries, "курс доллара");
+        ArrayList<String> labels = new ArrayList<>();
+        labels.add("Май 2017");
+        labels.add("Июнь 2017");
+        labels.add("Июль 2017");
+        labels.add("Август 2017");
+        labels.add("Сентябрь 2017");
+        labels.add("Октябрь 2017");
+        BarChart chart = new BarChart(this);
+        setContentView(chart);
+        BarData data = new BarData(labels, dataset);
+        chart.setData(data);
+        chart.setDescription("");
+        dataset.setColors(ColorTemplate.COLORFUL_COLORS);
+        chart.animateY(3000);
+    }
+}
