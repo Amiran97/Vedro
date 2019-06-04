@@ -1,0 +1,124 @@
+package com.vedro.drawsample;
+
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
+import android.graphics.Path;
+import android.graphics.RectF;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.View.OnTouchListener;
+
+public class MainActivity extends Activity {
+
+    class RenderView extends View implements OnTouchListener {
+        Paint paint;
+        int size = 40;
+        int posX = size;
+        int posY = size;
+        int dposX = 3;
+        int dposY = 3;
+        int figure;
+        RectF rect;
+        Path path;
+
+        public RenderView(Context context) {
+            super(context);
+            paint = new Paint();
+            paint.setStyle(Style.STROKE);
+            paint.setAntiAlias(true);
+            paint.setStrokeWidth(10);
+
+            path = new Path();
+
+            setOnTouchListener(this);
+
+            CountDownTimer GameTimer = new CountDownTimer(Long.MAX_VALUE, 1) {
+                public void onTick(long millisUntilFinished) {
+                    invalidate();
+                }
+
+                @Override
+                public void onFinish() {
+                }
+            };
+            GameTimer.start();
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            canvas.drawRGB(255, 255, 255);
+
+            if ((posX + size) >= canvas.getWidth() || (posX - size) < 0)
+                dposX = -dposX;
+            if ((posY + size) >= canvas.getHeight() || (posY - size) < 0)
+                dposY = -dposY;
+            posX += dposX;
+            posY += dposY;
+
+            if (figure > 5)
+                figure = 0;
+            rect = new RectF(posX - size, posY - size, posX + size, posY + size);
+            switch (figure) {
+                case 0:
+                    paint.setColor(Color.RED);
+                    canvas.drawCircle(posX, posY, 40, paint);
+                    break;
+                case 1:
+                    paint.setColor(Color.BLUE);
+                    canvas.drawRect(rect, paint);
+                    break;
+                case 2:
+                    paint.setColor(Color.BLACK);
+                    path.reset();
+                    path.moveTo(posX - size, posY - size);
+                    path.lineTo(posX + size, posY + size);
+                    path.moveTo(posX + size, posY - size);
+                    path.lineTo(posX - size, posY + size);
+                    canvas.drawPath(path, paint);
+                    break;
+                case 3:
+                    paint.setColor(Color.GREEN);
+                    canvas.drawRoundRect(rect, 10, 10, paint);
+                    break;
+                case 4:
+                    paint.setColor(Color.YELLOW);
+                    path.reset();
+                    path.moveTo(posX, posY - size);
+                    path.lineTo(posX + size, posY + size);
+                    path.lineTo(posX - size, posY + size);
+                    path.lineTo(posX, posY - size);
+                    canvas.drawPath(path, paint);
+                    break;
+                case 5:
+                    paint.setColor(Color.CYAN);
+                    canvas.drawArc(rect, 15, 295, true, paint);
+                    break;
+            }
+        }
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                figure++;
+            }
+            return true;
+        }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        RenderView myView = new RenderView(this);
+        setContentView(myView);
+    }
+}
