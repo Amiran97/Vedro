@@ -1,0 +1,97 @@
+MAinActivity.java:
+
+package com.vedro.animation;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.ScaleAnimation;
+import android.widget.ImageView;
+
+public class MainActivity extends AppCompatActivity {
+
+    boolean orel = true;
+    ScaleAnimation shrink, grow;
+    ImageView iv;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        iv = findViewById(R.id.img);
+        iv.setImageResource(R.drawable.avers);
+
+        shrink = new ScaleAnimation(1.0f, 0.0f, 1.0f, 1.0f,
+                ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
+                ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
+        shrink.setDuration(400);
+
+        grow = new ScaleAnimation(0.0f, 1.0f, 1.0f, 1.0f,
+                ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
+                ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
+        grow.setDuration(400);
+
+        shrink.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                if (orel) iv.setImageResource(R.drawable.revers);
+                else iv.setImageResource(R.drawable.avers);
+                iv.startAnimation(grow);
+                orel = !orel;
+            }
+        });
+
+        grow.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+            
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                if (orel) iv.setImageResource(R.drawable.avers);
+                else iv.setImageResource(R.drawable.revers);
+                iv.startAnimation(shrink);
+            }
+        });
+    }
+
+    public void onClick(View v) {
+        iv.startAnimation(shrink);
+    }
+}
+
+===================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFF">
+
+    <ImageView
+        android:id="@+id/img"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:onClick="onClick" />
+
+</LinearLayout>
