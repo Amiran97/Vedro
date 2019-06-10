@@ -1,0 +1,121 @@
+XML:
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/but1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:text="Add New Image!"
+        android:onClick="addImage" />
+
+</RelativeLayout>
+
+==================================================================================================================
+
+Java:
+
+package com.vedro.gestures;
+
+import android.content.DialogInterface;
+import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
+    private ViewGroup rootLayout;
+    private int xPos;
+    private int yPos;
+
+    long startTime = 0;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        rootLayout = findViewById(R.id.root);
+    }
+
+    public void addImage(View v) {
+        ImageView iv = new ImageView(this);
+        iv.setImageResource(R.drawable.pikachu);
+
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(450, 450);
+        iv.setLayoutParams(layoutParams);
+        rootLayout.addView(iv, layoutParams);
+        iv.setOnTouchListener(this);
+    }
+
+    public boolean onTouch(final View view, MotionEvent event) {
+        int X = (int) event.getRawX();
+        int Y = (int) event.getRawY();
+
+        int pointerCount = event.getPointerCount();
+
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+
+            case MotionEvent.ACTION_DOWN:
+                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
+                xPos = X - layoutParams.leftMargin;
+                yPos = Y - layoutParams.topMargin;
+                break;
+
+            case MotionEvent.ACTION_UP:
+                if (startTime == 0) {
+                    startTime = System.currentTimeMillis();
+                } else {
+                    if (System.currentTimeMillis() - startTime < 200) {
+
+                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                        builder.setMessage("Удалить картинку?");
+                        builder.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                view.setVisibility(View.GONE);
+                            }
+                        });
+
+                        builder.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+
+                        AlertDialog alertDialog = builder.create();
+                        alertDialog.show();
+                    }
+                    startTime = System.currentTimeMillis();
+                }
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+
+                if (pointerCount == 1) {
+                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) view.getLayoutParams();
+                    params.leftMargin = X - xPos;
+                    params.topMargin = Y - yPos;
+
+                    view.setLayoutParams(params);
+                }
+
+                if (pointerCount == 2) {
+                    view.setRotation(view.getRotation() + 5.0f);
+                }
+
+                break;
+        }
+
+        rootLayout.invalidate();
+        return true;
+    }
+}
