@@ -1,0 +1,184 @@
+XML:
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/buttonPrev"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="onClick"
+            android:text="&lt;&lt;" />
+
+        <Button
+            android:id="@+id/buttonForward"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="onClick"
+            android:text=">>" />
+    </LinearLayout>
+
+    <ImageSwitcher
+        android:id="@+id/imageSwitcher"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
+
+    </ImageSwitcher>
+
+</LinearLayout>
+
+==================================================================================================================
+
+Java:
+
+package com.vedro.gestures;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.widget.ImageSwitcher;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ViewSwitcher;
+
+public class MainActivity extends AppCompatActivity implements ViewSwitcher.ViewFactory, GestureDetector.OnGestureListener {
+
+    private ImageSwitcher mImageSwitcher;
+    int position = 0;
+    private int[] mImageIds = {R.drawable.pikachu, R.drawable.bulbasaur};
+
+    private GestureDetector mGestureDetector;
+    private static final int SWIPE_MIN_DISTANCE = 120;
+    private static final int SWIPE_MAX_OFF_PATH = 250;
+    private static final int SWIPE_THRESHOLD_VELOCITY = 100;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.activity_main);
+
+        mImageSwitcher = findViewById(R.id.imageSwitcher);
+        mImageSwitcher.setFactory(this);
+
+        Animation inAnimation = new AlphaAnimation(0, 1);
+        inAnimation.setDuration(600);
+        Animation outAnimation = new AlphaAnimation(1, 0);
+        outAnimation.setDuration(600);
+
+        mImageSwitcher.setInAnimation(inAnimation);
+        mImageSwitcher.setOutAnimation(outAnimation);
+
+        mImageSwitcher.setImageResource(mImageIds[0]);
+
+        mGestureDetector = new GestureDetector(this, this);
+
+    }
+
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.buttonForward:
+                setPositionNext();
+                mImageSwitcher.setImageResource(mImageIds[position]);
+                break;
+            case R.id.buttonPrev:
+                setPositionPrev();
+                mImageSwitcher.setImageResource(mImageIds[position]);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    public void setPositionNext() {
+        position++;
+        if (position > mImageIds.length - 1) {
+            position = 0;
+        }
+    }
+
+    public void setPositionPrev() {
+        position--;
+        if (position < 0) {
+            position = mImageIds.length - 1;
+        }
+    }
+
+    @Override
+    public View makeView() {
+        ImageView imageView = new ImageView(this);
+        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        imageView.setLayoutParams(new
+                ImageSwitcher.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+        imageView.setBackgroundColor(0xFF777777);
+        return imageView;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return mGestureDetector.onTouchEvent(event);
+    }
+
+    @Override
+    public boolean onDown(MotionEvent motionEvent) {
+        return false;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent motionEvent) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent motionEvent) {
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent motionEvent, MotionEvent motionEvent1, float v, float v1) {
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent motionEvent) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        try {
+            if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
+                return false;
+            // справа налево
+            if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE
+                    && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                setPositionNext();
+                mImageSwitcher.setImageResource(mImageIds[position]);
+            } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE
+                    && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                // слева направо
+                setPositionPrev();
+                mImageSwitcher.setImageResource(mImageIds[position]);
+            }
+        } catch (Exception ignored) {
+            return true;
+        }
+        return true;
+    }
+}
