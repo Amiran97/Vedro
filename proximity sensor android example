@@ -1,0 +1,69 @@
+MainActivity.java:
+
+package com.vedro.sensors;
+
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.TextView;
+
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
+    private SensorManager mgr;
+    private Sensor proximity;
+    private TextView text;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        mgr = (SensorManager) this.getSystemService(SENSOR_SERVICE);
+
+        proximity = mgr.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+
+        text = findViewById(R.id.text);
+    }
+
+    @Override
+    protected void onResume() {
+        mgr.registerListener(this, proximity, SensorManager.SENSOR_DELAY_NORMAL);
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        mgr.unregisterListener(this, proximity);
+        super.onPause();
+    }
+
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // nothing to do here
+    }
+
+    public void onSensorChanged(SensorEvent event) {
+        if (event.values[0] == 0) text.setText("Рука или голова совсем рядом");
+        else text.setText("Рядом с сенсором ничего нет...");
+    }
+}
+
+==========================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp"
+        android:textSize="20sp" />
+    
+</LinearLayout>
