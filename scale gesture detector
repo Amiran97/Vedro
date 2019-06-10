@@ -1,0 +1,80 @@
+activity_main.xml:
+
+потребуется один элемент ImageView с id = img1 !
+
+=================================================================================================================
+
+MainActivity.java:
+
+package com.vedro.gestures;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+
+public class MainActivity extends AppCompatActivity {
+    private ImageView imageView;
+    private float scale = 1f;
+    private ScaleGestureDetector detector;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        imageView = findViewById(R.id.img1);
+        detector = new ScaleGestureDetector(this, new MyScaleListener());
+    }
+
+    public boolean onTouchEvent(MotionEvent event) {
+        detector.onTouchEvent(event);
+        return super.onTouchEvent(event);
+    }
+
+    private class MyScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        float onScaleBegin = 0;
+        float onScaleEnd = 0;
+
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            scale *= detector.getScaleFactor();
+            imageView.setScaleX(scale);
+            imageView.setScaleY(scale);
+            return true;
+        }
+
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector detector) {
+
+            // Toast.makeText(getApplicationContext(), "Scale Begin", Toast.LENGTH_SHORT).show();
+            Log.i("scale_tag", "Scale Begin");
+            onScaleBegin = scale;
+
+            return true;
+        }
+
+        @Override
+        public void onScaleEnd(ScaleGestureDetector detector) {
+
+            // Toast.makeText(getApplicationContext(), "Scale Ended", Toast.LENGTH_SHORT).show();
+            Log.i("scale_tag", "Scale End");
+            onScaleEnd = scale;
+
+            if (onScaleEnd > onScaleBegin) {
+                // Toast.makeText(getApplicationContext(), "Scaled Up by a factor of  " + String.valueOf(onScaleEnd / onScaleBegin), Toast.LENGTH_SHORT).show();
+                 Log.i("scale_tag", "Scaled Up by a factor of  " + String.valueOf(onScaleEnd / onScaleBegin));
+            }
+
+            if (onScaleEnd < onScaleBegin) {
+                // Toast.makeText(getApplicationContext(), "Scaled Down by a factor of  " + String.valueOf(onScaleBegin / onScaleEnd), Toast.LENGTH_SHORT).show();
+                Log.i("scale_tag", "Scaled Down by a factor of  " + String.valueOf(onScaleBegin / onScaleEnd));
+            }
+
+            super.onScaleEnd(detector);
+        }
+    }
+}
