@@ -1,0 +1,157 @@
+MainActivity.java:
+
+package com.vedro.sensors;
+
+import android.app.Activity;
+import android.content.pm.ActivityInfo;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.os.Bundle;
+import android.widget.TextView;
+
+import java.util.Timer;
+import java.util.TimerTask;
+
+public class MainActivity extends Activity {
+
+    TextView tvText;
+    SensorManager sm;
+    Sensor sensorAccel;
+    Sensor sensorLinAccel;
+    Sensor sensorGravity;
+
+    StringBuilder sb = new StringBuilder();
+
+    Timer timer;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        tvText = findViewById(R.id.tv);
+        sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorAccel = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorLinAccel = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        sensorGravity = sm.getDefaultSensor(Sensor.TYPE_GRAVITY);
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sm.registerListener(listener, sensorAccel,
+                SensorManager.SENSOR_DELAY_NORMAL);
+        sm.registerListener(listener, sensorLinAccel,
+                SensorManager.SENSOR_DELAY_NORMAL);
+        sm.registerListener(listener, sensorGravity,
+                SensorManager.SENSOR_DELAY_NORMAL);
+
+        timer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showInfo();
+                    }
+                });
+            }
+        };
+        timer.schedule(task, 0, 100);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sm.unregisterListener(listener);
+        timer.cancel();
+    }
+
+    String format(float values[]) {
+        return String.format("%1$.1f\t\t%2$.1f\t\t%3$.1f", values[0], values[1], values[2]);
+    }
+
+    void showInfo() {
+        sb.setLength(0);
+        sb.append("Accelerometer: ").append(format(valuesAccel))
+                .append("\n\nLin acceleration: ").append(format(valuesLinAccel))
+                .append("\n\nGravity: ").append(format(valuesGravity) + "\n\n");
+
+
+        if (valuesAccel[0] > 9) sb.append("На левом боку");
+        if (valuesAccel[0] < -9) sb.append("На правом боку");
+
+        if (valuesAccel[1] > 9) sb.append("Вниз ногами");
+        if (valuesAccel[1] < -9) sb.append("Вверх ногами");
+
+        if (valuesAccel[2] > 9) sb.append("Экраном вверх");
+        if (valuesAccel[2] < -9) sb.append("Экраном вниз");
+
+        sb.append("\n\n");
+
+        if (valuesLinAccel[0] > 4) sb.append("Перемещение влево");
+        if (valuesLinAccel[0] < -4) sb.append("Перемещение вправо");
+
+        sb.append("\n\n");
+
+        if (valuesLinAccel[1] > 4) sb.append("Перемещение вниз");
+        if (valuesLinAccel[1] < -4) sb.append("Перемещение вверх");
+
+        sb.append("\n\n");
+
+        if (valuesLinAccel[2] > 4) sb.append("Перемещение от себя");
+        if (valuesLinAccel[2] < -4) sb.append("Перемещение на себя");
+
+        tvText.setText(sb);
+    }
+
+    float[] valuesAccel = new float[3];
+    float[] valuesLinAccel = new float[3];
+    float[] valuesGravity = new float[3];
+
+    SensorEventListener listener = new SensorEventListener() {
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            switch (event.sensor.getType()) {
+                case Sensor.TYPE_ACCELEROMETER:
+                    System.arraycopy(event.values, 0, valuesAccel, 0, 3);
+                    break;
+                case Sensor.TYPE_LINEAR_ACCELERATION:
+                    System.arraycopy(event.values, 0, valuesLinAccel, 0, 3);
+                    break;
+                case Sensor.TYPE_GRAVITY:
+                    System.arraycopy(event.values, 0, valuesGravity, 0, 3);
+                    break;
+            }
+        }
+    };
+}
+
+======================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/tv"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="20dp"
+        android:textSize="20sp" />
+
+</RelativeLayout>
