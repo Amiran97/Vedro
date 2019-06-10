@@ -1,0 +1,111 @@
+package com.vedro.gestures;
+
+import android.content.Context;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+
+class MyGestureDetector implements GestureDetector.OnGestureListener,
+        GestureDetector.OnDoubleTapListener {
+
+    private Context context;
+
+    public MyGestureDetector(Context context) {
+        this.context = context;
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        Log.i("gesture_", "onDown");
+        return true;
+    }
+
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent e) {
+        Log.i("gesture_", "onSingleTapConfirmed");
+        return true;
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        Log.i("gesture_", "onSingleTapUp");
+        return true;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+        Log.i("gesture_", "onShowPress");
+    }
+
+    @Override
+    public boolean onDoubleTap(MotionEvent e) {
+        Log.i("gesture_", "onDoubleTap");
+        return true;
+    }
+
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent e) {
+        Log.i("gesture_", "onDoubleTapEvent");
+        return true;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+        Log.i("gesture_", "onLongPress");
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        Log.i("gesture_", "onScroll");
+        if (e1.getY() < e2.getY()) {
+            Log.i("gesture_", "Scroll Down");
+        }
+        if (e1.getY() > e2.getY()) {
+            Log.i("gesture_", "Scroll Up");
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        if (e1.getX() < e2.getX()) {
+            Log.i("gesture_", "Left to Right swipe: " + e1.getX() + " - " + e2.getX());
+            Log.i("speed_", String.valueOf(velocityX) + " pixels/second");
+        }
+        if (e1.getX() > e2.getX()) {
+            Log.i("gesture_", "Right to Left swipe: " + e1.getX() + " - " + e2.getX());
+            Log.i("speed_", String.valueOf(velocityX) + " pixels/second");
+        }
+        if (e1.getY() < e2.getY()) {
+            Log.i("gesture_", "Up to Down swipe: " + e1.getX() + " - " + e2.getX());
+            Log.i("speed_", String.valueOf(velocityY) + " pixels/second");
+        }
+        if (e1.getY() > e2.getY()) {
+            Log.i("gesture_", "Down to Up swipe: " + e1.getX() + " - " + e2.getX());
+            Log.i("speed_", String.valueOf(velocityY) + " pixels/second");
+        }
+        return true;
+    }
+}
+
+public class MainActivity extends AppCompatActivity {
+
+    private GestureDetector detector;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        MyGestureDetector implementor = new MyGestureDetector(this);
+        detector = new GestureDetector(this, implementor);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        detector.onTouchEvent(event);
+        return super.onTouchEvent(event);
+    }
+}
