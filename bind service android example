@@ -1,0 +1,194 @@
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:background="#FF3333"
+        android:onClick="start"
+        android:text="Подключить сервис!"
+        android:textAllCaps="false" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:background="#FF8833"
+        android:onClick="stop"
+        android:text="Отключить сервис!"
+        android:textAllCaps="false" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:background="#FFFF33"
+        android:onClick="faster"
+        android:text="Логи быстрее!"
+        android:textAllCaps="false" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:background="#33AA33"
+        android:onClick="slower"
+        android:text="Логи медленнее!"
+        android:textAllCaps="false" />
+</LinearLayout>
+
+=============================================================
+
+MainActivity.java:
+
+package com.vedro.services;
+
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+
+public class MainActivity extends AppCompatActivity {
+
+    final String LOG_TAG = "service_logs";
+
+    boolean bound = false;
+    ServiceConnection sConn;
+    Intent intent;
+
+    long interval;
+    MyService service;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        intent = new Intent(this, MyService.class);
+
+        sConn = new ServiceConnection() {
+            public void onServiceConnected(ComponentName name, IBinder binder) {
+                Log.i(LOG_TAG, "MainActivity onServiceConnected");
+                service = ((MyService.MyBinder) binder).getService();
+                bound = true;
+            }
+
+            public void onServiceDisconnected(ComponentName name) {
+                // Система Android вызывает этот метод в случае непредвиденной потери
+                // подключения к сервису, например при сбое в работе сервиса или в случае
+                // его завершения. Этот метод не вызывается, когда клиент отменяет привязку.
+                Log.i(LOG_TAG, "MainActivity onServiceDisconnected");
+                bound = false;
+            }
+        };
+    }
+
+    public void start(View v) {
+        //  BIND_AUTO_CREATE - создать сервис, если он ещё не выполняется
+        bindService(intent, sConn, BIND_AUTO_CREATE);
+    }
+
+    public void stop(View v) {
+        if (!bound) return;
+        unbindService(sConn);
+        bound = false;
+    }
+
+    public void faster(View v) {
+        if (!bound) return;
+        interval = service.downInterval(100);
+        getSupportActionBar().setTitle("interval = " + interval);
+    }
+
+    public void slower(View v) {
+        if (!bound) return;
+        interval = service.upInterval(100);
+        getSupportActionBar().setTitle("interval = " + interval);
+    }
+}
+
+====================================================================================
+
+MyService.java:
+
+package com.vedro.services;
+
+import android.app.Service;
+import android.content.Intent;
+import android.os.Binder;
+import android.os.Handler;
+import android.os.IBinder;
+import android.util.Log;
+
+public class MyService extends Service {
+
+    final String LOG_TAG = "service_logs";
+
+    MyBinder binder = new MyBinder();
+    long interval = 1000;
+    Handler h;
+    Runnable r;
+    int counter = 0;
+
+    public void onCreate() {
+        super.onCreate();
+        Log.i(LOG_TAG, "MyService onCreate");
+
+        h = new Handler();
+        r = new Runnable() {
+            @Override
+            public void run() {
+                counter++;
+                Log.i(LOG_TAG, counter + "");
+                h.postDelayed(this, interval);
+            }
+        };
+        h.postDelayed(r, interval);
+    }
+
+    long upInterval(long gap) {
+        interval = interval + gap;
+        return interval;
+    }
+
+    long downInterval(long gap) {
+        interval = interval - gap;
+        if (interval < 100) interval = 100;
+        return interval;
+    }
+
+    public IBinder onBind(Intent intent) {
+        Log.i(LOG_TAG, "MyService onBind");
+        return binder;
+    }
+
+    class MyBinder extends Binder {
+        MyService getService() {
+            return MyService.this;
+        }
+    }
+
+    // Когда выполняется отмена привязки службы ко всем клиентам, система Android уничтожает такую
+    // службу (если она не была запущена вместе с onStartCommand())
+    public boolean onUnbind(Intent intent) {
+        Log.i(LOG_TAG, "MyService onUnbind");
+        return true;
+    }
+
+    public void onDestroy() {
+        super.onDestroy();
+        h.removeCallbacks(r);
+        Log.i(LOG_TAG, "MyService onDestroy");
+    }
+}
