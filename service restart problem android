@@ -1,0 +1,122 @@
+MainActivity.java:
+
+package com.vedro.services;
+
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void start(View v)
+    {
+        if(isMyServiceRunning(MyService.class)) return;
+        startService(new Intent(MainActivity.this, MyService.class));
+    }
+
+    public void stop(View v)
+    {
+        if(!isMyServiceRunning(MyService.class)) return;
+        stopService(new Intent(MainActivity.this, MyService.class));
+    }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+=================================================================================================================
+
+MyService.java:
+
+package com.vedro.services;
+
+import android.app.Service;
+import android.content.Intent;
+import android.os.Handler;
+import android.os.IBinder;
+import android.widget.Toast;
+
+public class MyService extends Service {
+
+    private Handler h;
+    private Runnable r;
+
+    int counter = 0;
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
+    public void onCreate() {
+
+        h = new Handler();
+        r = new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(MyService.this, ++counter + "", Toast.LENGTH_SHORT).show();
+                h.postDelayed(this, 3000);
+            }
+        };
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        h.post(r);
+        return Service.START_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        h.removeCallbacks(r);
+    }
+}
+
+================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/start"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:background="#00AA00"
+        android:onClick="start"
+        android:text="Запустить сервис!"
+        android:textAllCaps="false" />
+
+    <Button
+        android:id="@+id/stop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:background="#AA0000"
+        android:onClick="stop"
+        android:text="Остановить сервис!"
+        android:textAllCaps="false" />
+</LinearLayout>
