@@ -1,0 +1,198 @@
+MainActivity.java:
+
+package com.vedro.prefs;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Toast;
+
+public class MainActivity extends AppCompatActivity {
+
+    private SharedPreferences prefs;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener; // not a local variable!
+    // http://stackoverflow.com/questions/2542938/sharedpreferences-onsharedpreferencechangelistener-not-being-called-consistently
+
+    private boolean cb1;
+    private boolean cb2;
+    private String list1;
+    private String et1;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+            public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+                Toast.makeText(MainActivity.this, key, Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        prefs.registerOnSharedPreferenceChangeListener(listener);
+    }
+
+    public void setPref(View v) {
+        Intent intent = new Intent(this, PrefActivity.class);
+        startActivity(intent);
+    }
+
+    public void getPref(View v) {
+
+        cb1 = prefs.getBoolean("cb1", true);
+        cb2 = prefs.getBoolean("cb2", true);
+        list1 = prefs.getString("list1", "something");
+        et1 = prefs.getString("et1", "nothing");
+
+        Toast.makeText(this, cb1 + ", " + cb2 + ", " + list1 + ", " + et1, Toast.LENGTH_LONG).show();
+    }
+}
+
+===========================================================================================================================
+
+PrefActivity.java:
+
+package com.vedro.prefs;
+
+import android.os.Bundle;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceFragment;
+
+public class PrefActivity extends PreferenceActivity {
+
+    @Override
+    protected void onCreate(final Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        getFragmentManager().beginTransaction().replace(android.R.id.content, new MyPreferenceFragment()).commit();
+    }
+
+    public static class MyPreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(final Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.settings);
+        }
+    }
+}
+
+===========================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#c4c0c0"
+    android:orientation="vertical">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:onClick="setPref"
+        android:text="Выставить настройки"
+        android:textAllCaps="false" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:onClick="getPref"
+        android:text="Прочитать настройки"
+        android:textAllCaps="false" />
+
+</LinearLayout>
+
+===========================================================================================================================
+
+values / strings.xml:
+
+<resources>
+    <string name="app_name">Preferences Framework</string>
+
+    <string-array name="text_style">
+        <item>что-то</item>
+        <item>что-то другое</item>
+        <item>нечто особенное</item>
+        <item>что-нибудь</item>
+    </string-array>
+    
+</resources>
+
+===========================================================================================================================
+
+res / xml / settings.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="первая категория настроек">
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="cb1"
+            android:summary="описание пункта с чекбоксом"
+            android:title="первый пункт настроек" />
+        <EditTextPreference
+            android:defaultValue="какой-нибудь текст"
+            android:dialogTitle="напишите здесь какой-нибудь текст"
+            android:key="et1"
+            android:summary="это пункт с текстовым полем, нажмите и проверьте!"
+            android:title="второй пункт настроек" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="вторая категория настроек">
+        <ListPreference
+            android:defaultValue="1"
+            android:dialogTitle="выберите что-нибудь"
+            android:entries="@array/text_style"
+            android:entryValues="@array/text_style"
+            android:key="list1"
+            android:summary="это пункт со списком вариантов, нажмите и проверьте!"
+            android:title="третий пункт настроек" />
+        <SwitchPreference
+            android:key="switch1"
+            android:summaryOff="рычажок выключен"
+            android:summaryOn="рычажок включён"
+            android:switchTextOff="четвёртый пункт выключен"
+            android:switchTextOn="четвёртый пункт включён" />
+        <PreferenceScreen
+            android:key="new_screen"
+            android:summary="перейти к дополнительным настройкам"
+            android:title="пятый пункт настроек">
+            <CheckBoxPreference
+                android:defaultValue="true"
+                android:key="cb2"
+                android:summary="пункт настроек 5.1"
+                android:title="первый" />
+            <CheckBoxPreference
+                android:key="cb3"
+                android:summary="пункт настроек 5.2"
+                android:title="второй" />
+        </PreferenceScreen>
+        <PreferenceScreen
+            android:summary="влияет на системные настройки"
+            android:title="крутой шестой пункт">
+            <intent android:action="android.settings.AIRPLANE_MODE_SETTINGS" />
+        </PreferenceScreen>
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="cb4"
+            android:summary="влияет на восьмой пункт!"
+            android:title="седьмой пункт" />
+        <EditTextPreference
+            android:dependency="cb4"
+            android:key="et2"
+            android:summary="работает, если есть галочка на 7 пункте"
+            android:title="восьмой пункт" />
+    </PreferenceCategory>
+</PreferenceScreen>
+
+===========================================================================================================================
+
+AndroidManifest.xml:
+
+проверить, что там прописано PrefActivity!
