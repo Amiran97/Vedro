@@ -1,0 +1,95 @@
+package com.vedro.files;
+
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Toast;
+
+import java.io.*;
+
+class MyInFilterStream extends FilterInputStream {
+
+    MyInFilterStream(InputStream in) {
+        super(in);
+    }
+
+    @Override
+    public int read() throws IOException {
+        int b = super.read();
+        return (b == -1) ? b : b ^ 100;
+    }
+
+    @Override
+    public int read(@NonNull byte[] buf, int offset, int count) throws IOException {
+        int nread = super.read(buf, offset, count);
+        int last = offset + nread;
+        for (int i = offset; i < last; i++) {
+            buf[i] ^= 100;
+        }
+        return nread;
+    }
+}
+
+class MyOutFilterStream extends FilterOutputStream {
+
+    MyOutFilterStream(OutputStream out) {
+        super(out);
+    }
+
+    @Override
+    public void write(int b) throws IOException {
+        out.write(b ^ 100);
+    }
+
+    @Override
+    public void write(@NonNull byte[] buf) throws IOException {
+        for (int i = 0; i < buf.length; i++) {
+            buf[i] ^= 100;
+        }
+        super.write(buf);
+    }
+}
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void writeFile(View v) {
+
+        try {
+            File file = new File(getFilesDir() + File.separator + "shifr.txt");
+            file.createNewFile();
+
+            String text = "Hello, world!";
+
+            FileOutputStream os = new FileOutputStream(file);
+            FilterOutputStream out_fil = new MyOutFilterStream(os);
+            BufferedOutputStream out_buf = new BufferedOutputStream(out_fil, 512);
+            out_buf.write(text.getBytes());
+            out_buf.flush();
+            out_buf.close();
+            out_fil.close();
+            os.close();
+
+            FileInputStream is = new FileInputStream(file);
+            FilterInputStream in_fil = new MyInFilterStream(is);
+            BufferedInputStream in_buf = new BufferedInputStream(in_fil, 512);
+            byte[] result = new byte[(int) file.length()];
+            in_buf.read(result);
+            in_buf.close();
+            in_fil.close();
+            is.close();
+
+            String str = new String(result, "cp1251");
+            Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
+
+        } catch (IOException e) {
+            Toast.makeText(this, "IOException!", Toast.LENGTH_SHORT).show();
+        }
+    }
+}
