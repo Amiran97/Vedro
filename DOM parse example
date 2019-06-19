@@ -1,0 +1,129 @@
+MainActivity.java:
+
+package com.vedro.xmlparsing;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.widget.Toast;
+
+import org.w3c.dom.DOMException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+public class MainActivity extends AppCompatActivity {
+
+    String logTag = "xml_parse";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        
+        try {
+            InputStream file = getResources().openRawResource(getResources().getIdentifier("parse", "raw", getPackageName()));
+
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(file);
+
+            // optional, but recommended
+            // read this -
+            // http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
+            doc.getDocumentElement().normalize();
+
+            Log.i(logTag, "Root element: " + doc.getDocumentElement().getNodeName());
+
+            NodeList nList = doc.getElementsByTagName("staff");
+
+            Log.i(logTag, "----------------------------");
+
+            for (int temp = 0; temp < nList.getLength(); temp++) {
+
+                Node nNode = nList.item(temp);
+
+                Log.i(logTag, "\nCurrent Element: " + nNode.getNodeName());
+
+                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+
+                    Element eElement = (Element) nNode;
+
+                    Log.i(logTag, "Staff id: "
+                            + eElement.getAttribute("id"));
+                    Log.i(logTag, "First Name: "
+                            + eElement.getElementsByTagName("firstname")
+                            .item(0).getTextContent());
+                    Log.i(logTag, "Last Name: "
+                            + eElement.getElementsByTagName("lastname").item(0)
+                            .getTextContent());
+                    Log.i(logTag, "Nick Name: "
+                            + eElement.getElementsByTagName("nickname").item(0)
+                            .getTextContent());
+                    Log.i(logTag, "Salary: "
+                            + eElement.getElementsByTagName("salary").item(0)
+                            .getTextContent() + "\n");
+
+                }
+            }
+        } catch (ParserConfigurationException | SAXException | IOException |
+                DOMException e)
+        {
+            Log.i(logTag, "Smth wrong!");
+        }
+    }
+}
+
+===================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_margin="20dp"
+        android:layout_weight="8"
+        android:text="Please, go to Logcat!\nTag: xml_parse"
+        tools:ignore="LabelFor" />
+
+</LinearLayout>
+
+===================================================================================================================
+
+res \ raw \ parse.xml:
+
+<?xml version="1.0"?>
+<company>
+    <staff id="1">
+        <firstname>Arya</firstname>
+        <lastname>Stark</lastname>
+        <nickname>Noname</nickname>
+        <salary>10000</salary>
+    </staff>
+    <staff id="2">
+        <firstname>John</firstname>
+        <lastname>Snow</lastname>
+        <nickname>King</nickname>
+        <salary>20000</salary>
+    </staff>
+</company>
