@@ -1,0 +1,103 @@
+MainActivity.java:
+
+package com.vedro.files;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.EditText;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+
+public class MainActivity extends AppCompatActivity {
+
+    EditText text;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        text = findViewById(R.id.text);
+    }
+
+    public void writeFile(View v) {
+        try {
+            FileOutputStream outputStream = openFileOutput("test.txt", MODE_PRIVATE);
+            // MODE_PRIVATE will create the file (or replace a file of the same name)
+            // and make it private to your application. Other modes available are:
+            // MODE_APPEND, MODE_WORLD_READABLE, and MODE_WORLD_WRITEABLE.
+
+            // Note: The constants MODE_WORLD_READABLE and MODE_WORLD_WRITEABLE have been
+            // deprecated since API level 17. Starting from Android N their use will result
+            // in a SecurityException to be thrown!
+            outputStream.write(text.getText().toString().getBytes());
+            outputStream.close();
+            Toast.makeText(this, "Success!", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            text.setText("Произошла ошибка при записи :(");
+        }
+    }
+
+    public void readFile(View v) {
+        FileInputStream stream;
+        StringBuilder sb = new StringBuilder();
+        String line;
+
+        try {
+            stream = openFileInput("test.txt");
+            try {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+            } finally {
+                stream.close();
+            }
+            text.setText("Данные из файла: " + sb.toString());
+        } catch (Exception e) {
+            text.setText("Файла не существует, либо произошла ошибка при чтении :(");
+        }
+    }
+}
+
+===========================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#c4c0c0"
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:inputType="textMultiLine"
+        android:layout_weight="8" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:onClick="writeFile"
+        android:text="Write File"
+        android:textAllCaps="false" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:onClick="readFile"
+        android:text="Read File"
+        android:textAllCaps="false" />
+
+</LinearLayout>
