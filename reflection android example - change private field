@@ -1,0 +1,29 @@
+MainActivity.java:
+
+package com.vedro.serialization;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
+
+import java.lang.reflect.Field;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void onClick(View view) throws NoSuchFieldException, IllegalAccessException {
+        Student s = new Student("Alex");
+        Toast.makeText(this, s + "", Toast.LENGTH_SHORT).show();
+
+        Field f = s.getClass().getDeclaredField("name");
+        f.setAccessible(true);
+        f.set(s, "Vasya");
+        Toast.makeText(this, s + "", Toast.LENGTH_SHORT).show();
+    }
+}
