@@ -1,0 +1,116 @@
+MainActivity.java:
+
+package com.vedro.serialization;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+
+import java.io.*;
+import java.util.Arrays;
+
+public class MainActivity extends AppCompatActivity {
+
+    private String logTag = "serial_";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void onClick(View view) throws IOException, ClassNotFoundException {
+        Object toSave1 = 32; // Integer
+
+        // состояние сериализованного объекта будет храниться в байтовом потоке
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        // байтовый сериализатор объектов
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+        oos.writeObject(toSave1);
+
+        // сериализация - процесс сохранения состояния объекта в последовательность байт
+        byte[] bar = baos.toByteArray();
+
+        Log.i(logTag, Arrays.toString(bar));
+
+        // десериализация
+        ByteArrayInputStream bais = new ByteArrayInputStream(bar);
+        ObjectInputStream ois = new ObjectInputStream(bais);
+        Object objRead = ois.readObject();
+
+        // восстановленный объект идентичен исходному
+        Log.i(logTag, "readed object is: " + objRead.toString());
+        Log.i(logTag, "object equality is: " + (toSave1.equals(objRead)));
+        Log.i(logTag, "reference equality is: " + (toSave1 == objRead));
+        Log.i(logTag, "===============================================================");
+
+        Student toSave2 = new Student("Alex");
+
+        baos = new ByteArrayOutputStream();
+        oos = new ObjectOutputStream(baos);
+
+        oos.writeObject(toSave2);
+
+        bar = baos.toByteArray();
+
+        Log.i(logTag, Arrays.toString(bar));
+
+        bais = new ByteArrayInputStream(bar);
+        ois = new ObjectInputStream(bais);
+        objRead = ois.readObject();
+
+        Log.i(logTag, "readed object is: " + objRead.toString());
+        Log.i(logTag, "object equality is: " + (toSave2.equals(objRead)));
+        Log.i(logTag, "reference equality is: " + (toSave2 == objRead));
+
+    }
+}
+
+===============================================================================================================================
+
+Student.java:
+
+package com.vedro.serialization;
+
+import java.io.Serializable;
+
+class Student implements Serializable { // важно пометить класс как Serializable!
+
+    private String name;
+
+    public Student(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        Student s = (Student) o;
+        return name.equals(s.name);
+    }
+}
+
+===============================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="20dp"
+        android:onClick="onClick"
+        android:text="Serialize!" />
+
+</android.support.constraint.ConstraintLayout>
