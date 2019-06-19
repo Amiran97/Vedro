@@ -1,0 +1,195 @@
+MainActivity.java:
+
+package com.vedro.recyclerview;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        List<RecyclerItem> list = new ArrayList<>();
+
+        for(String item : getDataSet())
+        {
+            list.add(new RecyclerItem(item));
+        }
+
+        RecyclerView rv = findViewById(R.id.my_recycler_view);
+
+        // если есть уверенность, что изменения в контенте не изменят размер
+        // лэяута, то можно выставить true - это увеличивает производительность
+        rv.setHasFixedSize(true);
+
+        // назначение лэяут-менеджера
+        RecyclerView.LayoutManager lm;// = new LinearLayoutManager(this);
+         lm = new GridLayoutManager(this, 2); // 2 столбика
+        rv.setLayoutManager(lm);
+        // назначение адаптера
+        RecyclerView.Adapter a = new RecyclerAdapter(list);
+        rv.setAdapter(a);
+    }
+
+    private String[] getDataSet() {
+        int rowCount = 50;
+        String[] mDataSet = new String[rowCount];
+        for (int i = 0; i < rowCount; i++) {
+            mDataSet[i] = "пункт №" + i;
+        }
+        return mDataSet;
+    }
+}
+
+==================================================================================================================
+
+RecyclerItem.java:
+
+package com.vedro.recyclerview;
+
+package com.example.myapplication;
+
+public class RecyclerItem {
+    String textData;
+    String editData;
+    boolean checkData;
+    RecyclerItem(String textData)
+    {
+        this.textData = textData;
+        editData = "";
+        checkData = false;
+    }
+}
+
+==================================================================================================================
+
+RecyclerAdapter.java:
+
+package com.vedro.recyclerview;
+
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import java.util.List;
+
+class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHolder> {
+
+    private static List<RecyclerItem> mDataset;
+
+    // вьюхолдер будет хранить ссылку сформировавшиеся макеты пунктов списка
+    static class ViewHolder extends RecyclerView.ViewHolder {
+
+        // пункт состоит только из одного TextView
+        // если будут другие элементы, их нужно оформить как поля этого класса
+        TextView mTextView;
+        EditText mEditText;
+        CheckBox mCheckBox;
+
+        ViewHolder(View v) {
+            super(v);
+            mTextView = (TextView) v.findViewById(R.id.tv_recycler_item);
+            mEditText = (EditText) v.findViewById(R.id.edt_recycler_item);
+            mEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    if(hasFocus == false) {
+                        int pos = getAdapterPosition();
+                        mDataset.get(pos).editData = ((EditText)v).getText().toString();
+                    }
+                }
+            });
+            mCheckBox = (CheckBox) v.findViewById(R.id.chb_recycler_item);
+            mCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    int pos = getAdapterPosition();
+                    mDataset.get(pos).checkData = isChecked;
+                }
+            });
+        }
+    }
+
+    RecyclerAdapter(List<RecyclerItem> dataset) {
+        mDataset = dataset;
+    }
+
+    // создание новых вьюшек (вызывается лэяут-менеджером)
+    @Override
+    public RecyclerAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.recycler_item, parent, false);
+
+        return new ViewHolder(v);
+    }
+
+    // замена контента отдельной вьюшки (вызывается лэяут-менеджером)
+    @Override
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        holder.mTextView.setText(mDataset.get(position).textData);
+        holder.mEditText.setText(mDataset.get(position).editData);
+        holder.mCheckBox.setChecked(mDataset.get(position).checkData);
+
+    }
+
+    // определение количества пунктов списка
+    @Override
+    public int getItemCount() {
+        return mDataset.size();
+    }
+}
+
+==================================================================================================================
+
+recycler_item.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_recycler_item"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="7dp"
+        android:layout_marginTop="10dp"
+        android:textSize="18sp" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/edt_recycler_item"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="7dp"
+        android:layout_marginTop="10dp"
+        android:textSize="18sp"/>
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/chb_recycler_item"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="7dp"
+        android:layout_marginTop="10dp"
+        android:textSize="18sp"
+        android:text="Do you love me?"
+        android:layout_gravity="center_horizontal"/>
+
+</LinearLayout>
