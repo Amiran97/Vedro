@@ -1,0 +1,79 @@
+MainActivity.java:
+
+package com.vedro.serialization;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+
+import java.lang.reflect.Method;
+
+public class MainActivity extends AppCompatActivity {
+
+    private String logTag = "reflection_";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void onClick(View view) {
+        Student s = new Student("Alex");
+        Class c = s.getClass();
+        Method[] methods = c.getDeclaredMethods();
+        for (Method method : methods) {
+            Log.i(logTag, "method name: " + method.getName());
+            Log.i(logTag, "return type: " + method.getReturnType().getName());
+
+            Class[] paramTypes = method.getParameterTypes();
+            Log.i(logTag, "parameter types:");
+
+            for (Class paramType : paramTypes) {
+                Log.i(logTag, " " + paramType.getName());
+            }
+        }
+    }
+}
+
+=============================================================================================
+
+Student.java:
+
+package com.vedro.serialization;
+
+class Student {
+
+    private String name;
+    private int age = (int) (Math.random() * 20 + 20);
+
+    public Student(String name) {
+        setName(name);
+    }
+
+    @Override
+    public String toString() {
+        return "Name: " + name + ", age: " + age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        if (age >= 0 && age <= 100) {
+            this.age = age;
+        } else {
+            this.age = 18;
+        }
+    }
+}
