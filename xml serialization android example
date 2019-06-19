@@ -1,0 +1,140 @@
+MainActivity.java:
+
+package com.vedro.serialization;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
+
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
+
+import java.io.*;
+
+public class MainActivity extends AppCompatActivity {
+
+    private String logTag = "serial_";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void onClick(View view) {
+        try {
+            String path = getFilesDir() + File.separator + "person.xml";
+            File file = new File(path);
+            file.createNewFile();
+
+            // Create a Person object
+            Person person1 = new Person("John", "Snow");
+
+            // Serialize the Person
+            try {
+                Serializer serializer = new Persister();
+                serializer.write(person1, file);
+            } catch (Exception ignored) {
+
+            }
+
+            // Create a second person object
+            Person person2 = null;
+
+            // Deserialize the Person
+            if (file.exists()) {
+                try {
+                    Serializer serializer = new Persister();
+                    person2 = serializer.read(Person.class, file);
+                } catch (Exception ignored) {
+
+                }
+            }
+
+            boolean b = person1.equals(person2);
+            Toast.makeText(this, b + "", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "oops!", Toast.LENGTH_SHORT).show();
+        }
+    }
+}
+
+=====================================================================================
+
+Person.java:
+
+package com.vedro.serialization;
+
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+
+@Root
+public class Person
+{
+
+    public Person()
+    {
+    }
+
+    public Person(String inFirstName, String inLastName)
+    {
+        SetFirstname(inFirstName);
+        SetLastname(inLastName);
+    }
+
+    @Element
+    private String FirstName;
+
+    public String GetFirstName()
+    {
+        return FirstName;
+    }
+
+    public void SetFirstname(String inFirstName)
+    {
+        FirstName = inFirstName;
+    }
+
+    @Element
+    private String LastName;
+
+    public String GetLastName()
+    {
+        return LastName;
+    }
+
+    public void SetLastname(String inLastName)
+    {
+        LastName = inLastName;
+    }
+
+    @Override
+    public boolean equals(Object inObject)
+    {
+        if (inObject instanceof Person)
+        {
+            Person inPerson = (Person)inObject;
+            return this.FirstName.equalsIgnoreCase(inPerson.FirstName)
+                    && this.LastName.equalsIgnoreCase(inPerson.LastName);
+        }
+        return false;
+    }
+}
+
+================================================================================
+
+activity_main.xml: без изменений
+
+================================================================================
+
+build.gradle (Module app):
+
+добавить в dependencies, сделать sync now
+
+ implementation('org.simpleframework:simple-xml:2.7.+'){
+        exclude module: 'stax'
+        exclude module: 'stax-api'
+        exclude module: 'xpp3'
+    }
+    
