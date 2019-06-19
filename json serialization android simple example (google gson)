@@ -1,0 +1,85 @@
+MainActivity.java:
+
+package com.vedro.serialization;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
+
+import com.google.gson.Gson;
+
+import java.io.*;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void onClick(View view) {
+        try {
+
+            Gson gson = new Gson();
+
+            gson.toJson(1);
+            gson.toJson("abcd");
+            gson.toJson(new Long(10));
+            int[] values = {1, 2, 3, 4, 5};
+            String s = gson.toJson(values);
+
+            Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+
+            int a = gson.fromJson("1", int.class);
+            Integer b = gson.fromJson("1", Integer.class);
+            Long c = gson.fromJson("1", Long.class);
+            Boolean d = gson.fromJson("false", Boolean.class);
+            String e = gson.fromJson("\"abc\"", String.class);
+
+            /////////////////////////////////////////////////////////////////
+            // запишем строку s (с массивом) в файл!
+            /////////////////////////////////////////////////////////////////
+
+            String path = getFilesDir() + File.separator + "json.txt";
+            File file = new File(path);
+            file.createNewFile();
+
+            FileOutputStream outputStream;
+
+            try {
+                outputStream = new FileOutputStream(path);
+                outputStream.write(s.getBytes());
+                outputStream.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+            FileInputStream fis = new FileInputStream(path);
+            InputStreamReader isr = new InputStreamReader(fis);
+            BufferedReader bufferedReader = new BufferedReader(isr);
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                sb.append(line);
+            }
+
+            String json = sb.toString();
+            gson = new Gson();
+            int[] result = gson.fromJson(json, int[].class);
+            Toast.makeText(this, result[2] + "", Toast.LENGTH_SHORT).show();
+
+
+        } catch (Exception e) {
+            Toast.makeText(this, "oops!", Toast.LENGTH_SHORT).show();
+        }
+    }
+}
+
+================================================================================================
+
+build.gradle (Module app):
+
+добавить
+implementation 'com.google.code.gson:gson:2.7'
