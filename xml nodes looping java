@@ -1,0 +1,84 @@
+package com.vedro.xmlparsing;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.NamedNodeMap;
+
+public class MainActivity extends AppCompatActivity {
+
+    static String logTag = "xml_parse";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        try {
+
+            InputStream file = getResources().openRawResource(getResources().getIdentifier("parse", "raw", getPackageName()));
+
+            DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+
+            Document doc = dBuilder.parse(file);
+
+            Log.i(logTag, "Root element: " + doc.getDocumentElement().getNodeName());
+
+            if (doc.hasChildNodes()) {
+                printNote(doc.getChildNodes());
+            }
+
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            Log.i(logTag, e.getMessage());
+        }
+    }
+
+    private static void printNote(NodeList nodeList) {
+
+        for (int count = 0; count < nodeList.getLength(); count++) {
+
+            Node tempNode = nodeList.item(count);
+
+            // make sure it's element node.
+            if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
+
+                // get node name and value
+                Log.i(logTag, "\nNode Name = " + tempNode.getNodeName() + " [OPEN]");
+                Log.i(logTag, "Node Value = " + tempNode.getTextContent());
+
+                if (tempNode.hasAttributes()) {
+
+                    // get attributes names and values
+                    NamedNodeMap nodeMap = tempNode.getAttributes();
+
+                    for (int i = 0; i < nodeMap.getLength(); i++) {
+                        Node node = nodeMap.item(i);
+                        Log.i(logTag, "attribute name: " + node.getNodeName());
+                        Log.i(logTag, "attribute value: " + node.getNodeValue());
+                    }
+                }
+
+                if (tempNode.hasChildNodes()) {
+                    // loop again if has child nodes
+                    printNote(tempNode.getChildNodes());
+                }
+
+                Log.i(logTag, "Node Name = " + tempNode.getNodeName()
+                        + " [CLOSE]");
+            }
+        }
+    }
+}
