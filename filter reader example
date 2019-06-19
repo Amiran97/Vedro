@@ -1,0 +1,67 @@
+package com.vedro.files;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Toast;
+
+import java.io.FilterReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+
+class MakeUpperCase extends FilterReader {
+
+    protected MakeUpperCase(Reader r) {
+        super(r);
+        // Implicit super constructor FilterReader() is undefined for default
+        // constructor. Must define an explicit constructor!
+    }
+
+    @Override
+    public int read() throws IOException {
+        int c = super.read(); // Returns:
+        // The character read, as an integer in the range 0 to 65535,
+        // or -1 if the end of the stream has been reached
+        return (c == -1 ? c : Character.toUpperCase((char) c));
+    }
+
+    @Override
+    public int read(char[] buf, int offset, int count) throws IOException {
+        int nread = super.read(buf, offset, count);
+        int last = offset + nread;
+        for (int i = offset; i < last; i++) {
+            buf[i] = Character.toUpperCase(buf[i]);
+        }
+        return nread;
+    }
+}
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void writeFile(View v) {
+
+        StringBuilder sb = new StringBuilder(50);
+
+        try {
+            StringReader src = new StringReader("Test String!");
+
+            // abstract class for reading filtered character streams
+            FilterReader f = new MakeUpperCase(src);
+            int c;
+            while ((c = f.read()) != -1) {
+                sb.append((char)c);
+            }
+            Toast.makeText(this, sb.toString(), Toast.LENGTH_SHORT).show();
+
+        } catch (IOException e) {
+            Toast.makeText(this, "IOException!", Toast.LENGTH_SHORT).show();
+        }
+    }
+}
