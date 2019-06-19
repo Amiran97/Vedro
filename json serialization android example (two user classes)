@@ -1,0 +1,78 @@
+MainActivity.java:
+
+package com.vedro.serialization;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
+
+import com.google.gson.Gson;
+
+public class MainActivity extends AppCompatActivity {
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void onClick(View view) {
+        try {
+            Group group = new Group();
+            String jsonGroup = new Gson().toJson(group);
+            Toast.makeText(this, "Json:\n" + jsonGroup, Toast.LENGTH_SHORT).show();
+
+            Group returnTo = new Gson().fromJson(jsonGroup, Group.class);
+            Toast.makeText(this, "Object:\n" + returnTo, Toast.LENGTH_SHORT).show();
+
+        } catch (Exception e) {
+            Toast.makeText(this, "oops!", Toast.LENGTH_SHORT).show();
+        }
+    }
+}
+
+==========================================================================================================
+
+Student.java:
+
+package com.vedro.serialization;
+
+class Student {
+
+    private String name;
+    private int age = (int) (Math.random() * 20 + 20);
+
+    public Student(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "Name: " + name + ", age: " + age;
+    }
+}
+
+==========================================================================================================
+
+Group.java:
+
+package com.vedro.serialization;
+
+public class Group {
+
+    private Student first = new Student("Владимир");
+    private Student second = new Student("Александр");
+    private Student third = new Student("Юлия");
+    private Student fourth = new Student("Михаил");
+    private Student fifth = new Student("Артём");
+
+    @Override
+    public String toString() {
+        return first + "\n"
+                + second + "\n"
+                + third + "\n"
+                + fourth + "\n"
+                + fifth + "\n";
+    }
+}
