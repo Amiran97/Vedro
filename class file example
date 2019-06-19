@@ -1,0 +1,96 @@
+MainActivity.java:
+
+package com.vedro.files;
+
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Date;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void writeFile(View v) {
+        try {
+            // создаем объект File, ссылающийся на файл 1.txt
+            // на данном этапе создаётся
+            // связь между объектом файловой системы и экземпляром класса File,
+            // если объект файловой системы не существует, то он НЕ СОЗДАЁТСЯ
+            File file = new File(getFilesDir() + File.separator + "1.txt");
+
+            file.createNewFile();
+
+            FileWriter fw = new FileWriter(file);
+            fw.write("some text data");
+            fw.close();
+
+            Toast.makeText(this, "File exists: " + file.exists() + "\n" +
+                            "File name: " + file.getName() + "\n" +
+                            "File full path: " + file.getAbsolutePath() + "\n" +
+                            "Is directory: " + file.isDirectory() + "\n" +
+                            "Is file: " + file.isFile() + "\n" +
+                            "Is hidden: " + file.isHidden() + "\n" +
+                            "Last modification: " + new Date(file.lastModified()) + "\n" +
+                            "File length: " + file.length(),
+
+                    Toast.LENGTH_LONG).show();
+
+            /*
+            // open created file
+            Uri path = Uri.fromFile(file);
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            i.setDataAndType(path, "application/txt");
+            try {
+                // for android 6+
+                // https://stackoverflow.com/questions/38200282/android-os-fileuriexposedexception-file-storage-emulated-0-test-txt-exposed
+                // https://stackoverflow.com/questions/43103586/fileprovider-open-file-from-download-directory
+                
+                // https://medium.com/@ali.dev/open-a-file-in-another-app-with-android-fileprovider-for-android-7-42c9abb198c1
+                
+                // startActivity(i);
+            } catch (ActivityNotFoundException e) {
+                Toast.makeText(this, "ActivityNotFoundException!", Toast.LENGTH_SHORT).show();
+            }
+            */
+
+        } catch (IOException e) {
+            Toast.makeText(this, "IOException!", Toast.LENGTH_SHORT).show();
+        }
+    }
+}
+
+=======================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="20dp"
+        android:onClick="writeFile"
+        android:text="Open File"
+        android:textAllCaps="false" />
+
+</LinearLayout>
