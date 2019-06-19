@@ -1,0 +1,37 @@
+MainActivity.java:
+
+package com.vedro.serialization;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void onClick(View view) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, ClassNotFoundException, InstantiationException {
+        Class c = Class.forName("com.sunmeat.serialization.Student");
+
+        Class[] ar = new Class[1]; // constructor has 1 argument
+        ar[0] = String.class;
+        String name = "Alex";
+        Object obj = c.getDeclaredConstructor(ar).newInstance(name);
+
+        Student s = (Student) obj;
+
+        Class[] paramTypes = new Class[]{String.class};
+        Method method = c.getMethod("setName", paramTypes);
+        Object[] arg = new Object[]{"Vasya"};
+        method.invoke(s, arg);
+        Toast.makeText(this, s.getName(), Toast.LENGTH_SHORT).show();
+    }
+}
