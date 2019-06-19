@@ -1,0 +1,84 @@
+package com.vedro.files;
+
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void writeFile(View v) {
+
+        StringBuilder sb = new StringBuilder(50);
+
+        try {
+
+            File file = new File(getFilesDir() + File.separator + "buffer.txt");
+
+            file.createNewFile();
+
+            int countOfBytes = 200000;
+
+            // входящий поток (в программу, откуда-нибудь)
+            InputStream inStream = null;
+
+            // поток вывода (из программы, в файл например)
+            OutputStream outStream = null;
+
+            long timeStart = System.currentTimeMillis();
+            outStream = new FileOutputStream(file); // без буферизации!
+            // outStream = new BufferedOutputStream(outStream); // раскомментировать!
+
+            // Default buffer size in a BufferedInputStream is 8192 bytes.
+
+            // записываем в файл некоторое количество байт
+            for (int i = countOfBytes; i > 0; outStream.write(i--)) ;
+
+            long time = System.currentTimeMillis() - timeStart;
+
+            Log.i("read_file", "Время записи: " + time + " миллисекунд");
+
+            outStream.close();
+
+            // определяем время считывания без буферизации
+            timeStart = System.currentTimeMillis();
+
+            inStream = new FileInputStream(file);
+            while (inStream.read() != -1) ;
+
+            time = System.currentTimeMillis() - timeStart;
+            inStream.close();
+
+            Log.i("read_file", "На чтение затрачено: " + (time) + " миллисекунд");
+
+            // определяем время считывания с буферизацией
+            timeStart = System.currentTimeMillis();
+            inStream = new BufferedInputStream(new FileInputStream(file));
+
+            while (inStream.read() != -1) ;
+
+            time = System.currentTimeMillis() - timeStart;
+            inStream.close();
+
+            Log.i("read_file", "На буферизированное чтение затрачено: " + (time) + " миллисекунд");
+
+        } catch (IOException e) {
+            Toast.makeText(this, "IOException!", Toast.LENGTH_SHORT).show();
+        }
+    }
+}
