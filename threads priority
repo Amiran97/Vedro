@@ -1,0 +1,99 @@
+MainActivity.java:
+
+package com.vedro.threads;
+
+import android.content.pm.ActivityInfo;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.widget.TextView;
+
+public class MainActivity extends AppCompatActivity {
+
+    class MyThread extends Thread {
+        private TextView tv;
+        private String name;
+        private long state;
+
+        public MyThread(TextView tv, String name, int priority) {
+            this.tv = tv;
+            this.name = name;
+            setPriority(priority);
+            start();
+        }
+
+        @Override
+        public void run() {
+            for (long l = 0; l < Long.MAX_VALUE; l++) {
+                state = l;
+                final int step = 10000000;
+                if (l % step == 0) {
+                    //Log.i("thread_log", name + ": " + state / step);
+                    tv.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            tv.setText(name + ": " + state / step);
+                        }
+                    });
+                }
+            }
+        }
+    }
+
+    private TextView t1, t2, t3;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        t1 = findViewById(R.id.tv1);
+        t2 = findViewById(R.id.tv2);
+        t3 = findViewById(R.id.tv3);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        new MyThread(t1, "максимальный", Thread.MAX_PRIORITY);
+        new MyThread(t2, "нормальный", Thread.NORM_PRIORITY);
+        new MyThread(t3, "минимальный", Thread.MIN_PRIORITY);
+    }
+}
+
+===========================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:text=""
+        android:textSize="30sp" />
+
+    <TextView
+        android:id="@+id/tv2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:text=""
+        android:textSize="30sp" />
+
+    <TextView
+        android:id="@+id/tv3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:text=""
+        android:textSize="30sp" />
+</LinearLayout>
