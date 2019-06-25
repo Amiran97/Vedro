@@ -1,0 +1,242 @@
+Student.java:
+
+package com.vedro.sqlite;
+
+public class Student {
+    private int id;
+    private String name;
+
+    public Student(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public Student(String name) {
+        this.name = name;
+    }
+
+    public int getID() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+
+=======================================================================================================
+
+DBHelper.java:
+
+package com.vedro.sqlite;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class DBHelper extends SQLiteOpenHelper {
+
+    private static final int DATABASE_VERSION = 1;
+    private static final String DATABASE_NAME = "Step";
+
+    private static final String TABLE_STUDENTS = "Students";
+
+    private static final String COLUMN_ID = "id";
+    private static final String COLUMN_NAME = "name";
+
+    public DBHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        // 3 параметр: use for creating cursor objects, or null for the default
+    }
+
+    // если база данных не существует, то помощник SQLite создает базу данных,
+    // после чего выполняется метод помощника onCreate()
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        String CREATE_STUDENTS_TABLE_SCRIPT = "CREATE TABLE " + TABLE_STUDENTS
+                + "("
+                + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + COLUMN_NAME + " TEXT NOT NULL"
+                + ")";
+
+        db.execSQL(CREATE_STUDENTS_TABLE_SCRIPT);
+    }
+
+    // если база данных уже существует, то помощник SQlite сравнивает номер версии,
+    // хранящийся в базе данных, с номером версии в коде помощника.
+
+    // если номер версии в коде помощника SQLite больше номера версии базы данных,
+    // вызывается метод onUpgrade().
+
+    // если номер версии в коде помощника SQLite меньше номера версии базы данных,
+    // вызывается метод onDowngrade() - но его переопределять не обязательно.
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_STUDENTS);
+        onCreate(db);
+    }
+
+    // добавление одной записи в таблицу студентов
+    public void addStudent(Student s) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // класс ContentValues используется для добавления новых строк в таблицу.
+        // каждый объект этого класса представляет собой одну строку таблицы и
+        // выглядит как ассоциативный массив с именами столбцов и значениями,
+        // которые им соответствуют.
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_NAME, s.getName());
+        // если в записи несколько столбцов, то соответственно будет несколько "путов"
+
+        db.insert(TABLE_STUDENTS, null, values);
+        // cтроковое значение 2-го параметра nullColumnHack указывать не обязательно,
+        // чаще всего в этом параметре передается null. этот параметр присутствует
+        // на тот случай, если объект ContentValues пуст и нужно вставить в таблицу
+        // пустую строку. SQLite не позволит вставить пустую строку без указания
+        // имени хотя бы одного столбца, параметр nullColumnHack позволяет сделать это.
+
+        db.close();
+    }
+
+    public Student getStudent(int id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // вот так, очень по-злому, в SQLite выглядит старый добрый SELECT
+        // первый параметр метода query - из какой таблицы берутся данные
+        // второй параметр - строковые названия полей, по которым происходит выборка
+        // третий - условия вида _id = 19 and summary = ?
+        // четвёртый - массив данных, которые подставятся на место ?
+        // пятый - поля для группировки GROUP BY
+        // шестой - фильтр группировки HAVING
+        // седьмой - поля-критерии сортировки ORDER BY
+        // восьмой - лимит по количеству результатов
+        // https://developer.android.com/reference/android/database/sqlite/SQLiteDatabase.html#query(boolean, java.lang.String, java.lang.String[], java.lang.String, java.lang.String[], java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+        Cursor cursor = db.query(TABLE_STUDENTS,
+                new String[]{COLUMN_ID, COLUMN_NAME},
+                COLUMN_ID + " = ?", // " = ? AND " + COLUMN_NAME = " = ?" for two conditions
+                new String[] { id + "" },
+                null, null, null, null);
+
+        if (cursor != null)
+            cursor.moveToFirst();
+
+        return new Student(Integer.parseInt(cursor.getString(0)), cursor.getString(1));
+    }
+
+    public List<Student> getAll() {
+        List<Student> list = new ArrayList<>();
+
+        String selectQuery = "SELECT * FROM " + TABLE_STUDENTS;
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                Student s = new Student(Integer.parseInt(cursor.getString(0)), cursor.getString(1));
+                list.add(s);
+            } while (cursor.moveToNext());
+        }
+
+        return list;
+    }
+
+    public int getStudentsCount() {
+        String countQuery = "SELECT  * FROM " + TABLE_STUDENTS;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(countQuery, null);
+        cursor.close();
+
+        return cursor.getCount();
+        // return getAll().getSize();
+    }
+
+    public int updateStudent(Student s) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_NAME, s.getName());
+
+        return db.update(TABLE_STUDENTS,
+                values,
+                COLUMN_ID + " = ?",
+                new String[]{String.valueOf(s.getID())});
+    }
+
+    public void deleteStudent(Student s) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_STUDENTS,
+                COLUMN_ID + " = ?",
+                new String[]{String.valueOf(s.getID())});
+        db.close();
+    }
+}
+
+=======================================================================================================
+
+MainActivity.java:
+
+package com.vedro.sqlite;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.widget.TextView;
+
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // создание объекта-помощника для работы с БД
+        DBHelper db = new DBHelper(this);
+
+        // вставка записей в таблицу Students БД Step
+        db.addStudent(new Student("Наталья"));
+        db.addStudent(new Student("Кирилл"));
+        db.addStudent(new Student("Сергей"));
+        db.addStudent(new Student("Михаил"));
+
+        // выборка всех данных
+        List<Student> students = db.getAll();
+
+        String info = "";
+        for (Student s : students) {
+            info += s.getID() + ". " + s.getName() + "\n\n";
+        }
+
+        TextView tv = findViewById(R.id.info);
+        tv.setText(info);
+    }
+}
+
+=======================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#c4c0c0"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/info"
+        android:layout_width="match_parent"
+        android:padding="10dp"
+        android:layout_height="match_parent" />
+
+</LinearLayout>
