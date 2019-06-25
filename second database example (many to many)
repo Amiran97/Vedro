@@ -1,0 +1,474 @@
+Tag.java:
+
+package com.vedro.sqlite;
+
+class Tag {
+
+    private int id;
+    private String tagName;
+
+    Tag() {
+
+    }
+
+    Tag(String tagName) {
+        this.tagName = tagName;
+    }
+
+    void setId(int id) {
+        this.id = id;
+    }
+
+    void setTagName(String tagName) {
+        this.tagName = tagName;
+    }
+
+    int getId() {
+        return this.id;
+    }
+
+    String getTagName() {
+        return this.tagName;
+    }
+}
+
+====================================================================================================================
+
+ToDo.java:
+
+package com.vedro.sqlite;
+
+class ToDo {
+
+    private int id;
+    private String note;
+    private int status;
+
+    ToDo() {
+
+    }
+
+    ToDo(String note, int status) {
+        this.note = note;
+        this.status = status;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    void setNote(String note) {
+        this.note = note;
+    }
+
+    long getId() {
+        return id;
+    }
+
+    String getNote() {
+        return note;
+    }
+
+    int getStatus() {
+        return status;
+    }
+}
+
+====================================================================================================================
+
+DBHelper.java:
+
+package com.vedro.sqlite;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+class DBHelper extends SQLiteOpenHelper {
+
+    private static final int DATABASE_VERSION = 1;
+
+    private static final String DATABASE_NAME = "StepsToSuccess";
+
+    // названия таблиц
+    private static final String TABLE_TODO = "ToDos";
+    private static final String TABLE_TAG = "Tags";
+    private static final String TABLE_TODO_TAG = "ToDosTags";
+
+    // названия полей
+    private static final String KEY_ID = "id";
+    private static final String KEY_TODO = "todo";
+    private static final String KEY_STATUS = "status";
+    private static final String KEY_TAG_NAME = "tag_name";
+    private static final String KEY_TODO_ID = "id_todo";
+    private static final String KEY_TAG_ID = "id_tag";
+
+    // скрипты создания таблиц
+    private static final String CREATE_TABLE_TODO = "CREATE TABLE "
+            + TABLE_TODO + "(" + KEY_ID + " INTEGER PRIMARY KEY," + KEY_TODO
+            + " TEXT," + KEY_STATUS + " INTEGER" + ")";
+
+    private static final String CREATE_TABLE_TAG = "CREATE TABLE " + TABLE_TAG
+            + "(" + KEY_ID + " INTEGER PRIMARY KEY," + KEY_TAG_NAME + " TEXT" + ")";
+
+    private static final String CREATE_TABLE_TODO_TAG = "CREATE TABLE "
+            + TABLE_TODO_TAG + "(" + KEY_ID + " INTEGER PRIMARY KEY,"
+            + KEY_TODO_ID + " INTEGER," + KEY_TAG_ID + " INTEGER"
+            + ")";
+
+    DBHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(CREATE_TABLE_TODO);
+        db.execSQL(CREATE_TABLE_TAG);
+        db.execSQL(CREATE_TABLE_TODO_TAG);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TODO);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TAG);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TODO_TAG);
+        onCreate(db);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // методы для работы с задачами
+    /////////////////////////////////////////////////////////////////////////////
+
+    // создание новой задачи (со списком тегов)
+    long createToDo(ToDo todo, long[] tag_ids) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(KEY_TODO, todo.getNote());
+        values.put(KEY_STATUS, todo.getStatus());
+
+        long todo_id = db.insert(TABLE_TODO, null, values);
+
+        for (long tag_id : tag_ids) {
+            createToDoTag(todo_id, tag_id);
+        }
+
+        return todo_id;
+    }
+
+    // получение одной задачи по айди
+    ToDo getToDo(long todo_id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String selectQuery = "SELECT * FROM " + TABLE_TODO + " WHERE "
+                + KEY_ID + " = " + todo_id;
+
+        Cursor c = db.rawQuery(selectQuery, null);
+
+        ToDo td = new ToDo();
+        if (c != null) {
+            c.moveToFirst();
+            td.setId(c.getInt(c.getColumnIndex(KEY_ID)));
+            td.setNote((c.getString(c.getColumnIndex(KEY_TODO))));
+            c.close();
+        }
+
+        return td;
+    }
+
+    // получение всех задач
+    List<ToDo> getAllToDos() {
+        List<ToDo> todos = new ArrayList<>();
+        String selectQuery = "SELECT * FROM " + TABLE_TODO;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(selectQuery, null);
+
+        if (c.moveToFirst()) {
+            do {
+                ToDo td = new ToDo();
+                td.setId(c.getInt((c.getColumnIndex(KEY_ID))));
+                td.setNote((c.getString(c.getColumnIndex(KEY_TODO))));
+                todos.add(td);
+            } while (c.moveToNext());
+        }
+        c.close();
+        return todos;
+    }
+
+    // получение списка задач по тегу
+    List<ToDo> getAllToDosByTag(String tagName) {
+        List<ToDo> todos = new ArrayList<>();
+
+        String selectQuery = "SELECT * FROM " + TABLE_TODO + " td, "
+                + TABLE_TAG + " tg, " + TABLE_TODO_TAG + " tt WHERE tg."
+                + KEY_TAG_NAME + " = '" + tagName + "'" + " AND tg." + KEY_ID
+                + " = " + "tt." + KEY_TAG_ID + " AND td." + KEY_ID + " = "
+                + "tt." + KEY_TODO_ID;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(selectQuery, null);
+
+        if (c.moveToFirst()) {
+            do {
+                ToDo td = new ToDo();
+                td.setId(c.getInt((c.getColumnIndex(KEY_ID))));
+                td.setNote((c.getString(c.getColumnIndex(KEY_TODO))));
+                todos.add(td);
+            } while (c.moveToNext());
+        }
+
+        c.close();
+        return todos;
+    }
+
+    // получение количества тудушек
+    int getToDoCount() {
+        String countQuery = "SELECT * FROM " + TABLE_TODO;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(countQuery, null);
+
+        int count = cursor.getCount();
+        cursor.close();
+
+        return count;
+    }
+
+    // опциональное обновление задачи
+    int updateToDo(ToDo todo) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(KEY_TODO, todo.getNote());
+        values.put(KEY_STATUS, todo.getStatus());
+
+        return db.update(TABLE_TODO, values, KEY_ID + " = ?",
+                new String[]{String.valueOf(todo.getId())});
+    }
+
+    // удаление задачи
+    void deleteToDo(long tado_id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_TODO, KEY_ID + " = ?",
+                new String[]{String.valueOf(tado_id)});
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // методы для работы с тегами
+    /////////////////////////////////////////////////////////////////////////////
+
+    // добавление тега в БД
+    long createTag(Tag tag) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(KEY_TAG_NAME, tag.getTagName());
+
+        return db.insert(TABLE_TAG, null, values);
+    }
+
+    // получение коллекции всех тегов
+    List<Tag> getAllTags() {
+        List<Tag> tags = new ArrayList<>();
+        String selectQuery = "SELECT * FROM " + TABLE_TAG;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(selectQuery, null);
+
+        if (c.moveToFirst()) {
+            do {
+                Tag t = new Tag();
+                t.setId(c.getInt((c.getColumnIndex(KEY_ID))));
+                t.setTagName(c.getString(c.getColumnIndex(KEY_TAG_NAME)));
+                tags.add(t);
+            } while (c.moveToNext());
+        }
+        c.close();
+        return tags;
+    }
+
+    // обновление информации про тег
+    int updateTag(Tag tag) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(KEY_TAG_NAME, tag.getTagName());
+
+        return db.update(TABLE_TAG, values, KEY_ID + " = ?",
+                new String[]{String.valueOf(tag.getId())});
+    }
+
+    // удаление тега
+    void deleteTag(Tag tag, boolean should_delete_all_tag_todos) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // вместе с тегом удалятся все задачи по этому тегу, если надо
+        if (should_delete_all_tag_todos) {
+            List<ToDo> allTagToDos = getAllToDosByTag(tag.getTagName());
+            for (ToDo todo : allTagToDos) {
+                deleteToDo(todo.getId());
+            }
+        }
+
+        db.delete(TABLE_TAG, KEY_ID + " = ?",
+                new String[]{String.valueOf(tag.getId())});
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // методы для работы с промежуточной таблицей многие-ко-многим
+    /////////////////////////////////////////////////////////////////////////////
+
+    // добавление записи
+    long createToDoTag(long todo_id, long tag_id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(KEY_TODO_ID, todo_id);
+        values.put(KEY_TAG_ID, tag_id);
+
+        return db.insert(TABLE_TODO_TAG, null, values);
+    }
+
+    // закрытие соединения с БД
+    void closeDB() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        if (db != null && db.isOpen())
+            db.close();
+    }
+
+    // получение даты и времени (момент создания задачи/тега)
+    String getDateTime() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(
+                "dd-MM-yyyy HH:mm:ss", Locale.getDefault());
+        Date date = new Date();
+        return dateFormat.format(date);
+    }
+}
+
+====================================================================================================================
+
+MainActivity.java:
+
+package com.vedro.sqlite;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.widget.TextView;
+
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+
+    String results = "";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        DBHelper db = new DBHelper(this);
+
+        // создание тегов
+        Tag tag1 = new Tag("Покупки");
+        Tag tag2 = new Tag("Важно");
+        Tag tag3 = new Tag("Посмотреть");
+        Tag tag4 = new Tag("Работа");
+
+        // добавление тегов в БД
+        long tag1_id = db.createTag(tag1);
+        long tag2_id = db.createTag(tag2);
+        long tag3_id = db.createTag(tag3);
+        long tag4_id = db.createTag(tag4);
+
+        results += "Количество тегов: " + db.getAllTags().size() + "\n";
+
+        // создание задач, 0 - означает "не выполнено"
+        ToDo todo1 = new ToDo("новый ноут", 0);
+        ToDo todo2 = new ToDo("кроссовки", 0);
+        ToDo todo3 = new ToDo("шаурма", 0);
+
+        ToDo todo4 = new ToDo("Аладдин", 0);
+        ToDo todo5 = new ToDo("Король Лев", 0);
+        ToDo todo6 = new ToDo("История игрушек 4", 0);
+
+        ToDo todo7 = new ToDo("позвонить маме", 0);
+        ToDo todo8 = new ToDo("купить цветы на 14 февраля", 0);
+
+        ToDo todo9 = new ToDo("сделать презентацию по Git", 0);
+        ToDo todo10 = new ToDo("сходить на корпоратив", 0);
+
+        // добавление задач с пометкой "покупки"
+        long todo1_id = db.createToDo(todo1, new long[]{tag1_id});
+        long todo2_id = db.createToDo(todo2, new long[]{tag1_id});
+        long todo3_id = db.createToDo(todo3, new long[]{tag1_id});
+
+        // задачи с тегом "посмотреть"
+        long todo4_id = db.createToDo(todo4, new long[]{tag3_id});
+        long todo5_id = db.createToDo(todo5, new long[]{tag3_id});
+        long todo6_id = db.createToDo(todo6, new long[]{tag3_id});
+
+        // "важные" задачи
+        long todo7_id = db.createToDo(todo7, new long[]{tag2_id});
+        long todo8_id = db.createToDo(todo8, new long[]{tag2_id});
+
+        // рабочие моменты
+        long todo9_id = db.createToDo(todo9, new long[]{tag4_id});
+        long todo10_id = db.createToDo(todo10, new long[]{tag4_id});
+
+        results += "Количество задач: " + db.getToDoCount();
+
+        // сделать презентацию - это важно!
+        db.createToDoTag(todo9_id, tag2_id);
+
+        results += "\n\nНазвания тегов: ";
+
+        List<Tag> allTags = db.getAllTags();
+        for (Tag tag : allTags) {
+            results += tag.getTagName() + ", ";
+        }
+
+        results += "\n\nНазвания задач: ";
+
+        List<ToDo> allToDos = db.getAllToDos();
+        for (ToDo todo : allToDos) {
+            results += todo.getNote() + ", ";
+        }
+
+        results += "\n\nЧто я собрался посмотреть: ";
+
+        List<ToDo> tagsWatchList = db.getAllToDosByTag(tag3.getTagName());
+        for (ToDo todo : tagsWatchList) {
+            results += todo.getNote()+ ", ";
+        }
+
+        results += "\n\nБыло заданий: " + db.getToDoCount();
+        db.deleteToDo(todo10_id);
+        results += "\n\nНе пойду на корпоратив. Осталось заданий: " + db.getToDoCount();
+
+        // передумал тратить деньги...
+        db.deleteTag(tag1, true);
+        results += "\n\nДеньги закончились - а значит, никаких покупок! Осталось заданий: " + db.getToDoCount();
+
+        // переименование тега
+        tag3.setTagName("Фильмы");
+        db.updateTag(tag3);
+
+        db.closeDB();
+
+        TextView tv = findViewById(R.id.info);
+        tv.setText(results);
+    }
+}
+
+====================================================================================================================
+
+activity_main.xml:
+
+как в примере с первой базой!
