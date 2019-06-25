@@ -1,0 +1,82 @@
+MainActivity.java:
+
+package com.vedro.threads;
+
+import android.content.pm.ActivityInfo;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class MainActivity extends AppCompatActivity {
+
+    private TextView tv;
+    int goal = 100000;
+    int value = 0;
+    ReentrantLock lock = new ReentrantLock();
+
+    class Incrementator extends Thread {
+        @Override
+        public void run() {
+            for (int i = 0; i < goal; i++) {
+                lock.lock();
+                try {
+                    value++;
+                } finally {
+                    lock.unlock();
+                }
+            }
+        }
+    }
+
+    class Decrementator extends Thread {
+        @Override
+        public void run() {
+            for (int i = 0; i < goal; i++) {
+                lock.lock();
+                try {
+                    value--;
+                } finally {
+                    lock.unlock();
+                }
+            }
+        }
+    }
+
+    Incrementator first;
+    Decrementator second;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        tv = findViewById(R.id.tv1);
+    }
+
+    public void onClick(View v) {
+        value = 0;
+        first = new Incrementator();
+        second = new Decrementator();
+
+        first.start();
+        second.start();
+
+        try {
+            first.join();
+            second.join();
+        } catch (InterruptedException ignored) {
+
+        }
+
+        tv.post(new Runnable() {
+            @Override
+            public void run() {
+                tv.setText(value + "");
+            }
+        });
+    }
+}
