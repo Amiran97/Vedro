@@ -1,0 +1,141 @@
+MainActivity.java:
+
+package com.vedro.threads;
+
+import android.content.pm.ActivityInfo;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import static java.lang.Thread.sleep;
+
+public class MainActivity extends AppCompatActivity {
+
+    private TextView tv;
+
+    class MyRunnable implements Runnable {
+        private final long countUntil;
+        private int number;
+        private long sum;
+        private long thread;
+
+        MyRunnable(long countUntil, int number_of_runnable) {
+            this.countUntil = countUntil;
+            this.number = number_of_runnable;
+
+        }
+
+        @Override
+        public void run() {
+            thread = Thread.currentThread().getId();
+            sum = 0;
+            for (long i = 1; i < countUntil; i++) {
+                sum += i;
+            }
+
+            tv.post(new Runnable() {
+                @Override
+                public void run() {
+                    tv.setText(tv.getText() + " задача # " + number + ". сумма: " + sum + ", поток # "
+                            + thread + "\n");
+                }
+            });
+
+            try {
+                sleep(500);
+            } catch (InterruptedException ignored) {
+
+            }
+
+
+        }
+    }
+
+    class AnotherThread extends Thread {
+
+        AnotherThread() {
+            start();
+        }
+
+        @Override
+        public void run() {
+            // пул рассчитан на 5 потоков
+            ExecutorService executor = Executors.newFixedThreadPool(5);
+
+            // всего необходимо выполнить 31 задачу
+            for (int i = 0; i < 31; i++) {
+                // каждый поток должен посчитать сумму всех чисел
+                // в диапазоне от 0 до 40 миллионов
+                Runnable worker = new MyRunnable(40000000L + i, i);
+                executor.execute(worker); // добавляем поток в пул
+            }
+
+            executor.shutdown(); // новые задачи после этого уже нельзя добавить
+            // executor.shutdownNow(); // немедленно прекратить выполнение всех задач
+
+            // подождать немного, пока все задачи будут выполнены
+            try {
+                executor.awaitTermination(1, TimeUnit.DAYS);
+            } catch (InterruptedException ignored) {
+
+            }
+            tv.post(new Runnable() {
+                @Override
+                public void run() {
+                    tv.setText(tv.getText() + "Всё готово!\n");
+                }
+            });
+        }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        tv = findViewById(R.id.tv1);
+    }
+
+    public void onClick(View v) {
+        tv.setText("");
+        new AnotherThread();
+    }
+}
+
+=====================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_margin="12dp"
+        android:layout_weight="9"
+        android:text=""
+        android:textSize="12sp" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_margin="12dp"
+        android:layout_weight="1"
+        android:onClick="onClick"
+        android:text="Start!"
+        android:textSize="30sp" />
+
+</LinearLayout>
