@@ -1,0 +1,105 @@
+MainActivity.java:
+
+package com.vedro.threads;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.widget.Toast;
+
+public class MainActivity extends AppCompatActivity {
+
+    private final Object monitor = new Object();
+    private boolean ready = false;
+
+    class DataCreator extends Thread {
+
+        DataCreator() {
+            start();
+        }
+
+        @Override
+        public void run() {
+            prepareData();
+        }
+
+        void prepareData() {
+            synchronized (monitor) {
+                try {
+                    sleep(5000);
+                } catch (InterruptedException ignored) {
+                }
+
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "Data prepared!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                ready = true;
+                monitor.notifyAll();
+            }
+        }
+    }
+
+    class DataSender extends Thread {
+
+        DataSender() {
+            start();
+        }
+
+        @Override
+        public void run() {
+            sendData();
+        }
+
+        void sendData() {
+
+            MainActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this, "Waiting for data...", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            synchronized (monitor) {
+                while (!ready) {
+                    try {
+                        monitor.wait();
+                    } catch (InterruptedException e) {
+                        MainActivity.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "ложное пробуждение...", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                }
+
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "Sending data...", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // поток отправки данных специально запускается раньше
+        new DataSender();
+
+        // поток генерации данных
+        new DataCreator();
+    }
+}
+
+======================================================================================================================
+
+activity_main.xml:
+
+не важно что, предпочтительно без элементов
