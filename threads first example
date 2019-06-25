@@ -1,0 +1,100 @@
+MainActivity.java:
+
+package com.vedro.threads;
+
+import android.os.Handler;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.ScrollView;
+import android.widget.TextView;
+
+import java.util.Random;
+
+public class MainActivity extends AppCompatActivity {
+
+    private TextView tv;
+    private ScrollView sv;
+
+    public class MyThread extends Thread {
+        private int state;
+        private int number;
+        private int pause;
+
+        MyThread(int number, int pause) {
+            this.number = number;
+            this.pause = pause;
+            start();
+        }
+
+        public void run() {
+            for (int i = 0; i <= 10; i++) {
+                state = i;
+                tv.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        String space = "";
+                        for (int s = 0; s < number; s++) {
+                            space += "       ";
+                        }
+                        tv.setText(tv.getText() + "\n" + space + "thread # " + number + ": " + ((MyThread.this.state) * 10) + "%\n");
+
+                    }
+                });
+                sv.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        sv.fullScroll(ScrollView.FOCUS_DOWN);
+                    }
+                }, 100);
+
+                try {
+                    Thread.sleep(pause);
+                } catch (InterruptedException ignored) {
+
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        tv = findViewById(R.id.tv);
+        sv = findViewById(R.id.sv);
+
+        for (int i = 1; i <= 3; i++) {
+            new MyThread(i, 800 * i);
+        }
+    }
+}
+
+======================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:id="@+id/sv"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <TextView
+            android:id="@+id/tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:text=""
+            android:textSize="25sp" />
+    </ScrollView>
+</LinearLayout>
