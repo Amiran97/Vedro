@@ -1,0 +1,153 @@
+MainActivity.java:
+
+package com.vedro.threads;
+
+import android.content.pm.ActivityInfo;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.widget.TextView;
+
+import java.util.Random;
+
+public class MainActivity extends AppCompatActivity {
+
+    private TextView tv;
+
+    class EggVoice extends Thread {
+        @Override
+        public void run() {
+            for (int i = 0; i < 10; i++) {
+                try {
+                    sleep((new Random().nextInt(500) - 250) + 1000); // приостанавливает поток на 1 секунду
+                } catch (InterruptedException ignored) {
+                }
+
+                tv.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        tv.setText(tv.getText() + "яйцо!\n");
+                    }
+                });
+            }
+            // слово «яйцо» сказано 10 раз
+
+            if (!secondOpinion.isAlive()) {
+                tv.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        tv.setText(tv.getText() + "Первым появилось яйцо!\n");
+                    }
+                });
+            }
+        }
+    }
+
+    class ChickenVoice extends Thread {
+        @Override
+        public void run() {
+            for (int i = 0; i < 10; i++) {
+                try {
+                    sleep((new Random().nextInt(500) - 250) + 1000); // приостанавливает поток на 1 секунду
+                } catch (InterruptedException ignored) {
+                }
+
+                tv.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        tv.setText(tv.getText() + "курица!\n");
+                    }
+                });
+            }
+            // слово «курица» сказано 10 раз
+
+            if (!firstOpinion.isAlive()) {
+                tv.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        tv.setText(tv.getText() + "Первой появилась курица!\n");
+                    }
+                });
+            }
+        }
+    }
+
+    class Observer extends Thread {
+        @Override
+        public void run() {
+
+            try {
+                sleep(500);
+            } catch (InterruptedException ignored) {
+
+            }
+            // fight!
+            firstOpinion.start();
+            secondOpinion.start();
+
+            try {
+                firstOpinion.join();
+                secondOpinion.join();
+            } catch (InterruptedException ignored) {
+            }
+
+            tv.post(new Runnable() {
+                @Override
+                public void run() {
+                    tv.setText(tv.getText() + "Спор закончен!\n");
+                }
+            });
+        }
+    }
+
+    EggVoice firstOpinion;
+    ChickenVoice secondOpinion;
+    Observer observer;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        tv = findViewById(R.id.tv1);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        firstOpinion = new EggVoice();
+        secondOpinion = new ChickenVoice();
+        observer = new Observer();
+
+        tv.post(new Runnable() {
+            @Override
+            public void run() {
+                tv.setText("Спор начат...\n");
+            }
+        });
+
+        observer.start();
+    }
+}
+
+==========================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:text=""
+        android:textSize="18sp" />
+
+</LinearLayout>
