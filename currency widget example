@@ -1,0 +1,161 @@
+AndroidManifest.xml:
+
+...
+    <uses-permission android:name="android.permission.INTERNET" />
+...
+
+===============================================================================================================================
+
+FirstWidget.java:
+
+package com.vedro.widgets;
+
+import android.appwidget.AppWidgetManager;
+import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
+import android.content.Context;
+import android.os.AsyncTask;
+import android.widget.RemoteViews;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import java.io.IOException;
+import java.net.URL;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+public class FirstWidget extends AppWidgetProvider {
+
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        ComponentName thisWidget = new ComponentName(context, FirstWidget.class);
+        int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+
+        // https://developer.android.com/reference/android/os/AsyncTask.html
+        class LongOperation extends AsyncTask<Object, Void, String> {
+
+            private int[] ids;
+            private Context context;
+            private AppWidgetManager m;
+
+            @Override
+            protected String doInBackground(Object... params) {
+                ids = (int[]) params[0];
+                context = (Context) params[1];
+                m = (AppWidgetManager) params[2];
+
+                String data = "async task error occured!";
+                try {
+                    data = getData();
+                } catch (SAXException | ParserConfigurationException | IOException e) {
+                    e.printStackTrace();
+                }
+                return data;
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+                for (int widgetId : ids) {
+                    RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.first_widget);
+                    remoteViews.setTextViewText(R.id.update, result);
+                    m.updateAppWidget(widgetId, remoteViews);
+                }
+            }
+        }
+
+        // because of android.os.NetworkOnMainThreadException
+        new LongOperation().execute(allWidgetIds, context, appWidgetManager);
+    }
+
+    public String getData() throws SAXException, ParserConfigurationException, IOException {
+        URL url = new URL("http://resources.finance.ua/ru/public/currency-cash.xml");
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        // android.os.NetworkOnMainThreadException method!!!
+        Document doc = db.parse(url.openStream());
+        doc.getDocumentElement().normalize();
+        NodeList nodeList = doc.getElementsByTagName("currencies");
+        Node node = nodeList.item(0);
+        NamedNodeMap attributes = node.getFirstChild().getAttributes();
+        Node currencyAttribEUR = attributes.getNamedItem("ar");
+        String currencyValueEUR = currencyAttribEUR.getNodeValue();
+        return "Курс евро - " + currencyValueEUR;
+    }
+}
+
+===============================================================================================================================
+
+MainActivity.java:
+
+package com.vedro.widgets;
+
+import android.os.Bundle;
+import android.app.Activity;
+
+public class MainActivity extends Activity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+}
+
+===============================================================================================================================
+
+activity_main.xml:
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFFFF"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="Установите виджет курса валют!"
+        android:textSize="35sp" />
+</RelativeLayout>
+
+===============================================================================================================================
+
+first_widget.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="8dip"
+    android:background="@drawable/shape">
+
+    <TextView
+        android:id="@+id/update"
+        android:textSize="15sp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal|center_vertical"
+        android:text="данные загружаются..." />
+
+</LinearLayout>
+
+===============================================================================================================================
+
+first_widget_info.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialLayout="@layout/first_widget"
+    android:minHeight="40dp"
+    android:minWidth="200dp"
+    android:updatePeriodMillis="30000000" />
