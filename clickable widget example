@@ -1,0 +1,102 @@
+FirstWidget.java:
+
+package com.vedro.widgets;
+
+import android.app.PendingIntent;
+import android.appwidget.AppWidgetManager;
+import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.widget.RemoteViews;
+import java.util.Random;
+
+public class FirstWidget extends AppWidgetProvider {
+
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+
+        ComponentName thisWidget = new ComponentName(context, FirstWidget.class);
+        int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+
+        for (int widgetId : allWidgetIds) {
+
+            // create some random data
+            int number = new Random().nextInt(100);
+
+            RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.first_widget);
+
+            remoteViews.setTextViewText(R.id.update, String.valueOf(number));
+
+            // register an onClickListener!
+            Intent intent = new Intent(context, FirstWidget.class);
+
+            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            remoteViews.setOnClickPendingIntent(R.id.update, pendingIntent);
+            appWidgetManager.updateAppWidget(widgetId, remoteViews);
+        }
+    }
+}
+
+=================================================================================================================================
+
+res / drawable / shape.xml:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <stroke
+        android:width="2dp"
+        android:color="#FFFFFFFF" />
+
+    <gradient
+        android:angle="225"
+        android:endColor="#DD2ECCFA"
+        android:startColor="#DD000000" />
+
+    <corners
+        android:bottomLeftRadius="7dp"
+        android:bottomRightRadius="7dp"
+        android:topLeftRadius="7dp"
+        android:topRightRadius="7dp" />
+
+</shape>
+
+=================================================================================================================================
+
+first_widget.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="8dip"
+    android:background="@drawable/shape">
+
+    <TextView
+        android:id="@+id/update"
+        style="@android:style/TextAppearance.Medium"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_margin="4dip"
+        android:gravity="center_horizontal|center_vertical"
+        android:text="" />
+
+</LinearLayout>
+
+=================================================================================================================================
+
+res / xml / first_widget_info.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialLayout="@layout/first_widget"
+    android:minHeight="72dp"
+    android:minWidth="300dp"
+    android:updatePeriodMillis="3000000" />
