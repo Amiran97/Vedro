@@ -1,0 +1,84 @@
+FirstWidget.java:
+
+package com.vedro.widgets;
+
+import android.app.PendingIntent;
+import android.appwidget.AppWidgetManager;
+import android.appwidget.AppWidgetProvider;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.RemoteViews;
+import android.widget.Toast;
+import android.net.Uri;
+
+public class FirstWidget extends AppWidgetProvider {
+
+    @Override
+    public void onUpdate(Context context, AppWidgetManager wm, int[] appWidgetIds) {
+        Toast.makeText(context, "Виджет обновлён!", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle newOptions) {
+        Toast.makeText(context, "Размеры виджета изменились!", Toast.LENGTH_SHORT).show();
+    }
+}
+
+=================================================================================================================================
+
+drawable / shape.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:endColor="@color/colorPrimary"
+        android:startColor="@color/colorAccent" />
+    <corners android:radius="5dp" />
+    <stroke
+        android:width="3dp"
+        android:color="#333333" />
+</shape>
+
+=================================================================================================================================
+
+first_widget.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/shape"
+    android:paddingBottom="20dp"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:paddingTop="20dp"
+    android:shadowColor="#A8A8A8"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="W"
+        android:textColor="#ffffffff"
+        android:textSize="20sp" />
+
+</RelativeLayout>
+
+=================================================================================================================================
+
+res / xml / first_widget_info.xml:
+
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialLayout="@layout/first_widget"
+    android:minHeight="72dp"
+    android:minResizeHeight="72dp"
+    android:minResizeWidth="72dp"
+    android:minWidth="72dp"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0" />
