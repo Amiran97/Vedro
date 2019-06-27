@@ -1,0 +1,175 @@
+FirstWidget.java:
+
+package com.vedro.widgets;
+
+import android.appwidget.AppWidgetManager;
+import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+
+public class FirstWidget extends AppWidgetProvider {
+
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+
+        ComponentName thisWidget = new ComponentName(context, FirstWidget.class);
+        int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+
+        // build the intent to call the service
+        Intent intent = new Intent(context.getApplicationContext(), UpdateWidgetService.class);
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, allWidgetIds);
+
+        // update the widgets via the service
+        context.startService(intent);
+    }
+}
+
+==================================================================================================================================
+
+MainActivity.java:
+
+package com.vedro.widgets;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.app.Activity;
+import android.view.View;
+
+public class MainActivity extends Activity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void onClick(View v) {
+        stopService(new Intent(this, UpdateWidgetService.class));
+    }
+}
+
+==================================================================================================================================
+
+UpdateWidgetService.java: // этого файла не было раньше, его нужно создать!
+
+package com.vedro.widgets;
+
+import java.util.Random;
+
+import android.app.PendingIntent;
+import android.app.Service;
+import android.appwidget.AppWidgetManager;
+import android.content.Intent;
+import android.os.Handler;
+import android.os.IBinder;
+import android.widget.RemoteViews;
+
+public class UpdateWidgetService extends Service {
+
+    Intent i;
+    boolean started = false;
+    final Handler h = new Handler();
+    Runnable r;
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (started) {
+            h.removeCallbacks(r);
+        }
+
+        started = true;
+        i = intent;
+        r = new Runnable() {
+            @Override
+            public void run() {
+                action();
+                h.postDelayed(this, 1000);
+            }
+        };
+        h.post(r);
+
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        h.removeCallbacks(r);
+    }
+
+    private void action() {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this.getApplicationContext());
+
+        int[] allWidgetIds = i.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
+
+        for (int widgetId : allWidgetIds) {
+            // create some random data
+            int number = new Random().nextInt(100);
+
+            RemoteViews remoteViews = new RemoteViews(this
+                    .getApplicationContext().getPackageName(),
+                    R.layout.first_widget);
+            remoteViews.setTextViewText(R.id.update, String.valueOf(number));
+
+            // register an onClickListener
+            Intent clickIntent = new Intent(this.getApplicationContext(), FirstWidget.class);
+
+            clickIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            clickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, allWidgetIds);
+
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            remoteViews.setOnClickPendingIntent(R.id.update, pendingIntent);
+            appWidgetManager.updateAppWidget(widgetId, remoteViews);
+        }
+        //stopSelf();
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+}
+
+==================================================================================================================================
+
+activity_main.xml:
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFFFF">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_margin="30dp"
+        android:gravity="center"
+        android:textAllCaps="false"
+        android:onClick="onClick"
+        android:text="Для начала, разместите несколько виджетов, а затем нажмите на эту кнопку, чтобы остановить сервис"
+        android:textSize="30dp" />
+</RelativeLayout>
+
+==================================================================================================================================
+
+first_widget_info.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialLayout="@layout/first_widget"
+    android:minHeight="40dp"
+    android:minWidth="40dp"
+    android:updatePeriodMillis="30000000" />
+    
+==================================================================================================================================
+
+AndroidManifest.xml:
+
+проверить наличие
+
+  <service android:name=".UpdateWidgetService"
+            android:enabled="true"
+            android:exported="true">
+  </service>
