@@ -11,7 +11,7 @@ AndroidManifest.xml:
 
 MainActivity.java:
 
-package com.alex.camera;
+package com.vedro.camera;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
