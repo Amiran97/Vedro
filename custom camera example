@@ -1,0 +1,227 @@
+MainActivity.java:
+
+package com.vedro.customcamera;
+
+import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.hardware.Camera;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
+import android.support.v7.app.AppCompatActivity;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+
+public class MainActivity extends AppCompatActivity {
+
+    public static Activity activity;
+    Camera camera;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        activity = this;
+
+        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+        StrictMode.setVmPolicy(builder.build());
+
+        Dexter.withActivity(this)
+                .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        Manifest.permission.CAMERA)
+                .withListener(new MultiplePermissionsListener() {
+                    @Override
+                    public void onPermissionsChecked(MultiplePermissionsReport report) {
+                        Toast.makeText(MainActivity.this, "Permissions granted", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
+
+                    }
+                }).check();
+
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        camera = getCameraInstance();
+        CameraPreview mCameraPreview = new CameraPreview(this, camera);
+
+        FrameLayout preview = findViewById(R.id.camera_preview);
+        preview.addView(mCameraPreview);
+
+        Button captureButton = findViewById(R.id.button_capture);
+        captureButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                camera.takePicture(null, null, picture);
+            }
+        });
+    }
+
+    private Camera getCameraInstance() {
+        Camera camera = null;
+        try {
+            camera = Camera.open();
+        } catch (Exception e) {
+            Toast.makeText(MainActivity.activity, "getCameraInstance error", Toast.LENGTH_SHORT).show();
+        }
+        return camera;
+    }
+
+    Camera.PictureCallback picture = new Camera.PictureCallback() {
+        @Override
+        public void onPictureTaken(byte[] data, Camera camera) {
+            File f = getOutputMediaFile();
+            if (f == null) {
+                return;
+            }
+            try {
+                FileOutputStream fos = new FileOutputStream(f);
+                fos.write(data);
+                fos.close();
+
+                // OPEN NEW PHOTO FILE
+                Uri uri = Uri.fromFile(f);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(uri, "image/jpeg");
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                activity.startActivity(intent);
+
+                activity.finish();
+                System.exit(0);
+
+            } catch (IOException e) {
+                Toast.makeText(MainActivity.activity, "onPictureTaken error", Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+
+    File getOutputMediaFile() {
+        File directory = new File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "MyCameraApp");
+        if (!directory.exists()) {
+            if (!directory.mkdirs()) {
+                Toast.makeText(this, "failed to create directory", Toast.LENGTH_SHORT).show();
+                return null;
+            }
+        }
+
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+
+        File f;
+        f = new File(directory.getPath() + File.separator + "IMG_" + timeStamp + ".jpg");
+
+        return f;
+    }
+}
+
+class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
+
+    private Camera cam;
+
+    public CameraPreview(Context context, Camera camera) {
+        super(context);
+        cam = camera;
+        SurfaceHolder holder = this.getHolder();
+        holder.addCallback(this);
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        try {
+            cam.setPreviewDisplay(holder);
+            cam.setDisplayOrientation(90);
+            cam.startPreview();
+        } catch (IOException e) {
+            Toast.makeText(MainActivity.activity, "surfaceCreated error", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        cam.stopPreview();
+        cam.release();
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        try {
+            cam.setPreviewDisplay(holder);
+            cam.startPreview();
+
+        } catch (Exception e) {
+            Toast.makeText(MainActivity.activity, "surfaceChanged error", Toast.LENGTH_SHORT).show();
+        }
+    }
+}
+
+==============================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/camera_preview"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/button_capture"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Сделать снимок" />
+
+</LinearLayout>
+
+==============================================================================================================================
+
+styles.xml:
+
+<resources>
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+</resources>
+
+==============================================================================================================================
+
+AndroidManifest.xml:
+
+...
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+...
