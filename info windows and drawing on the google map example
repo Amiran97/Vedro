@@ -1,0 +1,167 @@
+package com.vedro.maps;
+
+import android.graphics.Color;
+import android.support.v4.app.FragmentActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolygonOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+
+    private GoogleMap m;
+    private Marker marker;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_maps);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+    }
+
+    @Override
+    public void onMapReady(GoogleMap map) {
+        m = map;
+        LatLng odessa = new LatLng(46.4825, 30.7233);
+        marker = m.addMarker(new MarkerOptions()
+                .position(odessa)
+                .title("Odessa")
+                .snippet("We are here!"));
+
+        // second marker for customization example!
+        m.addMarker(new MarkerOptions()
+                .position(new LatLng(48.4825, 30.7233))
+                .title("Somewhere")
+                .snippet("Snippet"));
+
+        m.moveCamera(CameraUpdateFactory.newLatLng(odessa));
+        m.animateCamera(CameraUpdateFactory.zoomTo(5f));
+
+        m.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+                Toast.makeText(MapsActivity.this, "info window click!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        m.setOnInfoWindowLongClickListener(new GoogleMap.OnInfoWindowLongClickListener() {
+            @Override
+            public void onInfoWindowLongClick(Marker marker) {
+                Toast.makeText(MapsActivity.this, "info window long click!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        m.setOnInfoWindowCloseListener(new GoogleMap.OnInfoWindowCloseListener() {
+            @Override
+            public void onInfoWindowClose(Marker marker) {
+                Toast.makeText(MapsActivity.this, "info window close", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        ///////////////////////////////////////////////////
+        // drawing on the map:
+        PolylineOptions line = new PolylineOptions()
+                .add(new LatLng(44.24, 26.05)) // бухарест
+                .add(new LatLng(47, 28.51)) // кишинёв
+                .add(new LatLng(47.31, 19.05)) // будапешт
+                .add(new LatLng(48.08, 17.06)) // братислава
+                .add(new LatLng(52.13, 21.02)) // варшава
+                .add(new LatLng(53.55, 27.33)) // минск
+                .add(new LatLng(55.45, 37.37)) // москва
+                .add(new LatLng(41.43, 44.48)) // тбилиси
+                .add(new LatLng(39.52, 32.52)) // анкара
+                .add(new LatLng(44.24, 26.05)) // бухарест
+                .geodesic(true)
+                .color(Color.MAGENTA).width(5);
+
+        m.addPolyline(line);
+
+        // for addHole:
+        List<LatLng> list = new ArrayList<>();
+        list.add(new LatLng(46.75, 30.25));
+        list.add(new LatLng(46.75, 30.75));
+        list.add(new LatLng(46.25, 30.75));
+        list.add(new LatLng(46.25, 30.25));
+
+        PolygonOptions poli = new PolygonOptions()
+                .add(new LatLng(47, 30))
+                .add(new LatLng(46, 30))
+                .add(new LatLng(46, 31))
+                .add(new LatLng(47, 31))
+                .addHole(list)
+                .geodesic(true)
+                .strokeColor(Color.GRAY)
+                .fillColor(Color.YELLOW)
+                .strokeWidth(10);
+
+        m.addPolygon(poli);
+
+        CircleOptions co = new CircleOptions()
+                .center(new LatLng(50.45, 30.52)) // киев
+                .radius(65000) // метров
+                .strokeColor(Color.GRAY)
+                .fillColor(Color.BLUE)
+                .strokeWidth(5);
+
+        m.addCircle(co);
+
+        GroundOverlayOptions newarkMap = new GroundOverlayOptions()
+                .image(BitmapDescriptorFactory.fromResource(R.drawable.car_marker))
+                .position(new LatLng(46.975, 31.9946), 5000f, 5000f); // николаев, 5000 - это метры, которые занимает картинка
+        map.addGroundOverlay(newarkMap);
+    }
+
+    public void changeType(View v) {
+        // кастомизация информационных окон!
+        m.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+
+            // сначала происходит попытка вызова метода getInfoWindow
+            // если для конкретного маркера этот метод вернёт null, тогда
+            // вызовется метод getInfoContents
+            @Override
+            public View getInfoWindow(Marker marker) {
+                if (marker.getId().equals(MapsActivity.this.marker.getId())) {
+                    TextView tv = new TextView(MapsActivity.this);
+                    tv.setText("в Николаев приехала машинка!");
+                    tv.setTextColor(Color.RED);
+                    return tv;
+                } else
+                    return null;
+            }
+
+            // как сделать кастомную вёрстку инфо-контента:
+            // http://android-er.blogspot.com/2013/01/create-custom-info-contents-for-by.html
+            // http://wptrafficanalyzer.in/blog/customizing-infowindow-contents-in-google-map-android-api-v2-using-infowindowadapter/
+            @Override
+            public View getInfoContents(Marker marker) {
+                TextView tv = new TextView(MapsActivity.this);
+                tv.setText("get info contents");
+                return tv;
+            }
+        });
+
+        marker.showInfoWindow();
+        // marker.hideInfoWindow(); // программно скрыть информационное окно
+        // boolean show = marker.isInfoWindowShown(); // проверка, показывается ли окно
+    }
+}
