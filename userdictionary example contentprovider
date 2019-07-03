@@ -1,0 +1,112 @@
+MainActivity.java:
+
+package com.vedro.providers;
+
+import android.app.Activity;
+import android.content.ContentResolver;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.UserDictionary;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class MainActivity extends Activity {
+    EditText text;
+    TextView allWords;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        text = findViewById(R.id.text);
+        allWords = findViewById(R.id.allWords);
+    }
+
+    public void onClick(View v) {
+
+        if (v.getId() == R.id.add) {
+            UserDictionary.Words.addWord(this, text.getText().toString(), 100, UserDictionary.Words.LOCALE_TYPE_ALL);
+            Toast.makeText(getApplicationContext(), "Слово добавлено!", Toast.LENGTH_SHORT).show();
+        } else if (v.getId() == R.id.show) {
+            Uri dictionary = UserDictionary.Words.CONTENT_URI;
+            ContentResolver resolver = getContentResolver();
+            Cursor cursor = resolver.query(dictionary, null, null, null, null);
+            allWords.setText("");
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    String word = cursor.getString(cursor.getColumnIndex(UserDictionary.Words.WORD));
+                    allWords.append(word + "\n");
+                    // также доступны поля:
+                    /* int id = cursor.getInt(cursor.getColumnIndex(UserDictionary.Words._ID));
+                    String app = cursor.getString(cursor.getColumnIndex(UserDictionary.Words.APP_ID));
+                    int frequency = cursor.getInt(cursor.getColumnIndex(UserDictionary.Words.FREQUENCY));
+                    String locale = cursor.getString(cursor.getColumnIndex(UserDictionary.Words.LOCALE));
+                   */
+                }
+            }
+        }
+    }
+}
+
+====================================================================================================================
+
+activity_main.xml:
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <EditText
+        android:id="@+id/text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp">
+
+        <requestFocus />
+    </EditText>
+
+    <Button
+        android:id="@+id/add"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:onClick="onClick"
+        android:text="Добавить слово"
+        android:textAllCaps="false" />
+
+    <Button
+        android:id="@+id/show"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:onClick="onClick"
+        android:text="Показать все слова"
+        android:textAllCaps="false" />
+
+    <ScrollView
+        android:id="@+id/scroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp">
+
+        <TextView
+            android:id="@+id/allWords"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="" />
+    </ScrollView>
+
+</LinearLayout>
+
+====================================================================================================================
+
+AndroidManifest.xml:
+
+<uses-permission android:name="android.permission.WRITE_USER_DICTIONARY"/>
+<uses-permission android:name="android.permission.READ_USER_DICTIONARY"/>
