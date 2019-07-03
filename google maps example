@@ -151,7 +151,7 @@ activity_maps.xml:
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="com.sunmeat.maps.MapsActivity" />
+        tools:context="com.vedro.maps.MapsActivity" />
 
 </LinearLayout>
 
