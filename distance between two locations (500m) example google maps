@@ -1,0 +1,142 @@
+MapsActivity.java:
+
+package com.vedro.maps;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.ArrayList;
+
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+
+    private GoogleMap m;
+    private ArrayList<Marker> allMarkers;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_maps);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+        allMarkers = new ArrayList<>();
+
+    }
+
+    private float getDistance(LatLng one, LatLng another) {
+        Location l1 = new Location("l1");
+        l1.setLatitude(one.latitude);
+        l1.setLongitude(one.longitude);
+
+        Location l2 = new Location("l2");
+        l2.setLatitude(another.latitude);
+        l2.setLongitude(another.longitude);
+
+        float dist = l1.distanceTo(l2);
+        return dist;
+    }
+
+    @Override
+    public void onMapReady(GoogleMap map) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        m = map;
+        m.setMyLocationEnabled(true);
+        LatLng odessa = new LatLng(46.4876132818091, 30.727231876007);
+
+        Marker marker = m.addMarker(new MarkerOptions().position(odessa)
+                .title("Drag Me!").snippet("We are here!").draggable(true));
+
+        m.moveCamera(CameraUpdateFactory.newLatLng(odessa));
+        m.animateCamera(CameraUpdateFactory.zoomTo(14f));
+
+        map.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+            @Override
+            public void onMarkerDragStart(Marker marker) {
+
+            }
+
+            @Override
+            public void onMarkerDrag(Marker marker) {
+                double lat = marker.getPosition().latitude;
+                double lng = marker.getPosition().longitude;
+                Log.i("marker_drag", lat + ", " + lng);
+
+                double tolerance = 0.01;
+                for (Marker current : allMarkers) {
+                    //if (current.getPosition().latitude >= lat - tolerance
+                    //        && current.getPosition().latitude <= lat + tolerance
+                    //        && current.getPosition().longitude >= lng - tolerance
+                    //        && current.getPosition().longitude <= lng + tolerance) {
+                    if (getDistance(marker.getPosition(), current.getPosition()) < 500) {
+                        current.setVisible(true);
+                    } else {
+                        current.setVisible(false);
+                    }
+                }
+            }
+
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
+
+            }
+        });
+    }
+
+    public void addCoords(View v) {
+        for (int i = 0; i < 100; i++) {
+            double lat = ((int) ((46.4825 + (Math.random() - 0.5) / 10) * 1000)) / 1000.0;
+            double lng = ((int) ((30.7233 + (Math.random() - 0.5) / 10) * 1000)) / 1000.0;
+            allMarkers.add(m.addMarker(
+                    new MarkerOptions()
+                            .position(new LatLng(lat, lng))
+                            .title("!")
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+                            .visible(false)));
+        }
+    }
+}
+
+=====================================================================================================================
+
+activity_maps.xml:
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="addCoords"
+        android:text="!!! НАЖМИТЕ НА КНОПКУ !!!" />
+
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="com.vedro.maps.MapsActivity" />
+
+</LinearLayout>
