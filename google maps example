@@ -1,0 +1,180 @@
+MapsActivity.java:
+
+package com.vedro.maps;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+
+    private GoogleMap m;
+    private int mapType = 1; // normal type
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_maps);
+
+        // https://github.com/Karumi/Dexter
+        Dexter.withActivity(this)
+                .withPermissions(Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION)
+                .withListener(new MultiplePermissionsListener() {
+                    @Override
+                    public void onPermissionsChecked(MultiplePermissionsReport report) {
+                        Toast.makeText(MapsActivity.this, "OK", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
+                       
+                    }
+                }).check();
+                
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+    }
+
+    @Override
+    public void onMapReady(GoogleMap map) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        m = map;
+        m.setMyLocationEnabled(true);
+        LatLng odessa = new LatLng(46.4825, 30.7233);
+        m.addMarker(new MarkerOptions().position(odessa)
+                .title("Marker in Odessa").snippet("We are here!"));
+        m.moveCamera(CameraUpdateFactory.newLatLng(odessa));
+        m.animateCamera(CameraUpdateFactory.zoomTo(5f));
+
+    }
+
+    public void changeType(View v) {
+
+        // GoogleMap class fields:
+        // public static final int MAP_TYPE_NONE = 0;
+        // public static final int MAP_TYPE_NORMAL = 1;
+        // public static final int MAP_TYPE_SATELLITE = 2;
+        // public static final int MAP_TYPE_TERRAIN = 3;
+        // public static final int MAP_TYPE_HYBRID = 4;
+
+        mapType++;
+        if (mapType > 4) mapType = 1;
+
+        m.setMapType(mapType);
+        String types[] = {"NONE", "NORMAL", "SATELLITE", "TERRAIN", "HYBRID"};
+        ((Button) (v)).setText(types[mapType]);
+
+
+        // добавление маркера
+        double lat = ((int) ((46.4825 + (Math.random() - 0.5) * 10) * 1000)) / 1000.0;
+        double lng = ((int) ((30.7233 + (Math.random() - 0.5) * 10) * 1000)) / 1000.0;
+
+        // BitmapDescriptorFactory class fileds
+        // public static final float HUE_VIOLET = 270.0F;
+        // public static final float HUE_MAGENTA = 300.0F;
+        // public static final float HUE_ROSE = 330.0F;
+        // цвет маркера
+        float color = (float) ((int) (Math.random() * 12) * 30);
+
+        m.addMarker(new MarkerOptions().position(new LatLng(lat, lng))
+                .title(lat + " широты, " + lng + " долготы")
+                .icon(BitmapDescriptorFactory.defaultMarker(color)));
+        // кастомная иконка для маркера (проверить!)
+        //.icon(BitmapDescriptorFactory.fromResource(R.drawable.car_marker)));
+        // варианты загрузок маркеров:
+        // fromAsset(String assetName) – loading from assets folder
+        // fromBitmap (Bitmap image) – loading bitmap image
+        // fromFile (String path) – loading from file
+
+        // перемещение камеры в определённые координаты с анимацией (проверить!)
+        /*
+        CameraPosition cameraPosition = new CameraPosition.Builder().target(
+                new LatLng(lat, lng)).zoom(12).build();
+        m.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        */
+
+        // добавляем кнопки для зума
+        m.getUiSettings().setZoomControlsEnabled(true);
+
+        // отключаем жест зуминга
+        // m.getUiSettings().setZoomGesturesEnabled(false);
+
+        // отключаем жест поворота карты
+        // m.getUiSettings().setRotateGesturesEnabled(false);
+
+        // добавляем кнопку компаса (нужно будет повернуть карту, чтобы появилась кнопка)
+        m.getUiSettings().setCompassEnabled(true);
+
+        // прячем кнопку возврата в текущее месторасположение (без интернета работать скорее всего не будет)
+        // m.getUiSettings().setMyLocationButtonEnabled(false);
+    }
+}
+
+============================================================================================================
+
+activity_maps.xml:
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="changeType"
+        android:text="Change Map Type (now NORMAL)"
+        android:textAllCaps="false" />
+
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="com.sunmeat.maps.MapsActivity" />
+
+</LinearLayout>
+
+============================================================================================================
+
+res / drawable / car_marker.png нужен для кастомной иконки маркера
+
+============================================================================================================
+
+AndroidManifest.xml (на всякий случай):
+
+...
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+...
+   
+============================================================================================================
+
+build.gradle (Module:app) - на всякий случай:
+
+dependencies {
+    ...
+    implementation 'com.karumi:dexter:5.0.0'
+}
