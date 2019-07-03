@@ -1,0 +1,135 @@
+MapsActivity.java:
+
+package com.vedro.maps;
+
+import android.support.v4.app.FragmentActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+
+    private GoogleMap m;
+
+    // https://developers.google.com/android/reference/com/google/android/gms/maps/model/Marker#showInfoWindow()
+    private Marker marker;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_maps);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+    }
+
+    @Override
+    public void onMapReady(GoogleMap map) {
+        m = map;
+        LatLng odessa = new LatLng(46.4825, 30.7233);
+        marker = m.addMarker(new MarkerOptions()
+                .position(odessa)
+                .title("Odessa")
+
+                // некоторые свойства маркера:
+                .draggable(true) // маркер можно будет перетаскивать
+                .flat(true) // маркет будет крутиться вместе с картой
+                .rotation(90) // поворот маркета в градусах
+                .alpha(0.5f) // прозрачность
+                .visible(true) // видимость маркера
+
+                .snippet("We are here!"));
+
+        m.moveCamera(CameraUpdateFactory.newLatLng(odessa));
+        m.animateCamera(CameraUpdateFactory.zoomTo(5f));
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // слушатели карты:
+
+        m.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+
+            @Override
+            public void onMapClick(LatLng latLng) {
+                Log.i("map_tag", "onMapClick: " + latLng.latitude + "," + latLng.longitude);
+                // Toast.makeText(MapsActivity.this, "onMapClick: " + latLng.latitude + "," + latLng.longitude, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        m.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+
+            @Override
+            public void onMapLongClick(LatLng latLng) {
+                Log.i("map_tag", "onMapLongClick: " + latLng.latitude + "," + latLng.longitude);
+                // Toast.makeText(MapsActivity.this, "onMapLongClick: " + latLng.latitude + "," + latLng.longitude, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        map.setOnCameraMoveStartedListener(new GoogleMap.OnCameraMoveStartedListener() {
+            @Override
+            public void onCameraMoveStarted(int i) {
+                Log.i("map_tag", "start moving");
+                // Toast.makeText(MapsActivity.this, "start moving", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        map.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
+            @Override
+            public void onCameraMove() {
+                Log.i("map_tag", "moving...");
+                // Toast.makeText(MapsActivity.this, "moving...", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        map.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
+            @Override
+            public void onCameraIdle() {
+                Log.i("map_tag", "idle");
+                // Toast.makeText(MapsActivity.this, "idle", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // слушатели для маркеров на карте:
+        // https://developers.google.com/android/reference/com/google/android/gms/maps/GoogleMap#setOnMarkerClickListener(com.google.android.gms.maps.GoogleMap.OnMarkerClickListener)
+        map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                Log.i("map_tag", marker.getTitle());
+                // Toast.makeText(MapsActivity.this, marker.getTitle(), Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        });
+
+        map.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+            @Override
+            public void onMarkerDragStart(Marker marker) {
+
+            }
+
+            @Override
+            public void onMarkerDrag(Marker marker) {
+
+            }
+
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
+
+            }
+        });
+
+    }
+
+    public void changeType(View v) {
+        marker.showInfoWindow();
+    }
+}
