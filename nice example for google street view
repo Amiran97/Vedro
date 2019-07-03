@@ -13,7 +13,7 @@ activity_maps.xml:
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        tools:context="com.sunmeat.maps.MapsActivity" />
+        tools:context="com.vedro.maps.MapsActivity" />
 
     <fragment
         android:id="@+id/streetviewpanorama"
