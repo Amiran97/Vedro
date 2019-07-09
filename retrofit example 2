@@ -1,0 +1,504 @@
+AndroidManifest.xml:
+
+...
+    <uses-permission android:name="android.permission.INTERNET" />
+...
+
+=========================================================================================================================
+
+ApiClient.java:
+
+package com.vedro.retrofit;
+
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+
+public class ApiClient {
+
+    public static final String BASE_URL = "http://api.themoviedb.org/3/";
+    private static Retrofit retrofit = null;
+
+    public static Retrofit getClient() {
+        if (retrofit == null) {
+            retrofit = new Retrofit.Builder()
+                    .baseUrl(BASE_URL)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+        return retrofit;
+    }
+}
+
+=========================================================================================================================
+
+ApiInterface.java:
+
+package com.vedro.retrofit;
+
+import retrofit2.Call;
+import retrofit2.http.GET;
+import retrofit2.http.Path;
+import retrofit2.http.Query;
+
+public interface ApiInterface {
+    @GET("movie/top_rated")
+    Call<MovieResponse> getTopRatedMovies(@Query("api_key") String apiKey);
+
+    @GET("movie/{id}")
+    Call<MovieResponse> getMovieDetails(@Path("id") int id, @Query("api_key") String apiKey);
+}
+
+=========================================================================================================================
+
+MainActivity.java:
+
+package com.vedro.retrofit;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.widget.Toast;
+
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class MainActivity extends AppCompatActivity {
+    private static final String TAG = MainActivity.class.getSimpleName();
+
+    // TODO - insert your themoviedb.org API KEY here
+    private final static String API_KEY = "8f663caefb9c78b4b33f1c2ff31d13f3";
+
+    private String BASE_URL = "https://api.github.com";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        if (API_KEY.isEmpty()) {
+            Toast.makeText(getApplicationContext(), "Please obtain your API KEY from themoviedb.org first!", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        final RecyclerView recyclerView = findViewById(R.id.movies_recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
+
+        Call<MovieResponse> call = apiService.getTopRatedMovies(API_KEY);
+        call.enqueue(new Callback<MovieResponse>() {
+            @Override
+            public void onResponse(Call<MovieResponse> call, Response<MovieResponse> response) {
+                int statusCode = response.code();
+                List<Movie> movies = response.body().getResults();
+                recyclerView.setAdapter(new MoviesAdapter(movies, R.layout.list_item_movie, getApplicationContext()));
+            }
+
+            @Override
+            public void onFailure(Call<MovieResponse> call, Throwable t) {
+                Log.e(TAG, t.toString());
+            }
+        });
+    }
+}
+
+=========================================================================================================================
+
+Movie.java:
+
+package com.vedro.retrofit;
+
+import com.google.gson.annotations.SerializedName;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Movie {
+    @SerializedName("poster_path")
+    private String posterPath;
+    @SerializedName("adult")
+    private boolean adult;
+    @SerializedName("overview")
+    private String overview;
+    @SerializedName("release_date")
+    private String releaseDate;
+    @SerializedName("genre_ids")
+    private List<Integer> genreIds = new ArrayList<Integer>();
+    @SerializedName("id")
+    private Integer id;
+    @SerializedName("original_title")
+    private String originalTitle;
+    @SerializedName("original_language")
+    private String originalLanguage;
+    @SerializedName("title")
+    private String title;
+    @SerializedName("backdrop_path")
+    private String backdropPath;
+    @SerializedName("popularity")
+    private Double popularity;
+    @SerializedName("vote_count")
+    private Integer voteCount;
+    @SerializedName("video")
+    private Boolean video;
+    @SerializedName("vote_average")
+    private Double voteAverage;
+
+    public Movie(String posterPath, boolean adult, String overview, String releaseDate, List<Integer> genreIds, Integer id,
+                 String originalTitle, String originalLanguage, String title, String backdropPath, Double popularity,
+                 Integer voteCount, Boolean video, Double voteAverage) {
+        this.posterPath = posterPath;
+        this.adult = adult;
+        this.overview = overview;
+        this.releaseDate = releaseDate;
+        this.genreIds = genreIds;
+        this.id = id;
+        this.originalTitle = originalTitle;
+        this.originalLanguage = originalLanguage;
+        this.title = title;
+        this.backdropPath = backdropPath;
+        this.popularity = popularity;
+        this.voteCount = voteCount;
+        this.video = video;
+        this.voteAverage = voteAverage;
+    }
+
+    public String getPosterPath() {
+        return posterPath;
+    }
+
+    public void setPosterPath(String posterPath) {
+        this.posterPath = posterPath;
+    }
+
+    public boolean isAdult() {
+        return adult;
+    }
+
+    public void setAdult(boolean adult) {
+        this.adult = adult;
+    }
+
+    public String getOverview() {
+        return overview;
+    }
+
+    public void setOverview(String overview) {
+        this.overview = overview;
+    }
+
+    public String getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(String releaseDate) {
+        this.releaseDate = releaseDate;
+    }
+
+    public List<Integer> getGenreIds() {
+        return genreIds;
+    }
+
+    public void setGenreIds(List<Integer> genreIds) {
+        this.genreIds = genreIds;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getOriginalTitle() {
+        return originalTitle;
+    }
+
+    public void setOriginalTitle(String originalTitle) {
+        this.originalTitle = originalTitle;
+    }
+
+    public String getOriginalLanguage() {
+        return originalLanguage;
+    }
+
+    public void setOriginalLanguage(String originalLanguage) {
+        this.originalLanguage = originalLanguage;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getBackdropPath() {
+        return backdropPath;
+    }
+
+    public void setBackdropPath(String backdropPath) {
+        this.backdropPath = backdropPath;
+    }
+
+    public Double getPopularity() {
+        return popularity;
+    }
+
+    public void setPopularity(Double popularity) {
+        this.popularity = popularity;
+    }
+
+    public Integer getVoteCount() {
+        return voteCount;
+    }
+
+    public void setVoteCount(Integer voteCount) {
+        this.voteCount = voteCount;
+    }
+
+    public Boolean getVideo() {
+        return video;
+    }
+
+    public void setVideo(Boolean video) {
+        this.video = video;
+    }
+
+    Double getVoteAverage() {
+        return voteAverage;
+    }
+
+    public void setVoteAverage(Double voteAverage) {
+        this.voteAverage = voteAverage;
+    }
+}
+
+=========================================================================================================================
+
+MovieResponse.java:
+
+package com.vedro.retrofit;
+
+import com.google.gson.annotations.SerializedName;
+import java.util.List;
+
+public class MovieResponse {
+    @SerializedName("page")
+    private int page;
+    @SerializedName("results")
+    private List<Movie> results;
+    @SerializedName("total_results")
+    private int totalResults;
+    @SerializedName("total_pages")
+    private int totalPages;
+
+    public int getPage() {
+        return page;
+    }
+
+    public void setPage(int page) {
+        this.page = page;
+    }
+
+    public List<Movie> getResults() {
+        return results;
+    }
+
+    public void setResults(List<Movie> results) {
+        this.results = results;
+    }
+
+    public int getTotalResults() {
+        return totalResults;
+    }
+
+    public void setTotalResults(int totalResults) {
+        this.totalResults = totalResults;
+    }
+
+    public int getTotalPages() {
+        return totalPages;
+    }
+
+    public void setTotalPages(int totalPages) {
+        this.totalPages = totalPages;
+    }
+}
+
+=========================================================================================================================
+
+MoviesAdapter.java:
+
+package com.vedro.retrofit;
+
+import android.content.Context;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import java.util.List;
+
+public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewHolder> {
+
+    private List<Movie> movies;
+    private int rowLayout;
+    private Context context;
+
+    public static class MovieViewHolder extends RecyclerView.ViewHolder {
+        LinearLayout moviesLayout;
+        TextView movieTitle;
+        TextView data;
+        TextView movieDescription;
+        TextView rating;
+        
+        public MovieViewHolder(View v) {
+            super(v);
+            moviesLayout = v.findViewById(R.id.movies_layout);
+            movieTitle = v.findViewById(R.id.title);
+            data = v.findViewById(R.id.subtitle);
+            movieDescription = v.findViewById(R.id.description);
+            rating = v.findViewById(R.id.rating);
+        }
+    }
+
+    public MoviesAdapter(List<Movie> movies, int rowLayout, Context context) {
+        this.movies = movies;
+        this.rowLayout = rowLayout;
+        this.context = context;
+    }
+
+    @Override
+    public MoviesAdapter.MovieViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(rowLayout, parent, false);
+        return new MovieViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(MovieViewHolder holder, final int position) {
+        holder.movieTitle.setText(movies.get(position).getTitle());
+        holder.data.setText(movies.get(position).getReleaseDate());
+        holder.movieDescription.setText(movies.get(position).getOverview());
+        holder.rating.setText(movies.get(position).getVoteAverage().toString());
+    }
+
+    @Override
+    public int getItemCount() {
+        return movies.size();
+    }
+}
+
+=========================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/movies_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</RelativeLayout>
+
+=========================================================================================================================
+
+list_item_movie.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/movies_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:minHeight="72dp"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:paddingRight="16dp"
+            android:textColor="@color/colorBlack"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingRight="16dp"
+            android:textColor="@color/colorGreyLight" />
+
+        <TextView
+            android:id="@+id/description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="3"
+            android:paddingRight="16dp"
+            android:textColor="@color/colorGreyLight" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="35dp"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/rating_image"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:layout_centerInParent="true"
+            android:scaleType="centerCrop"
+            android:src="@drawable/star"
+            android:tint="@color/colorAccent" />
+
+        <TextView
+            android:id="@+id/rating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:text="5.0" />
+    </LinearLayout>
+
+</LinearLayout>
+
+=========================================================================================================================
+
+build.gradle (Module:app):
+
+dependencies {
+    ...
+    implementation 'com.google.code.gson:gson:2.7'
+    implementation 'com.squareup.retrofit2:converter-gson:2.0.2'
+    implementation 'com.android.support:recyclerview-v7:25.2.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.1.0'
+}
