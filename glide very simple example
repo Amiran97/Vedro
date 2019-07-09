@@ -1,0 +1,66 @@
+build.gradle (Module: app):
+
+// https://github.com/bumptech/glide
+
+dependencies {
+    ...
+     implementation 'com.github.bumptech.glide:glide:4.8.0'
+     annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0'
+}
+
+=======================================================================================================================
+
+AndroidManifest.xml:
+
+...
+<uses-permission android:name="android.permission.INTERNET" />
+...
+
+=======================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>
+
+=======================================================================================================================
+
+MainActivity.java:
+
+package com.vedro.glide;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.widget.ImageView;
+
+import com.bumptech.glide.Glide;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        ImageView imageView = findViewById(R.id.imageView);
+
+        Glide.with(this)
+                .load("https://raw.githubusercontent.com/bumptech/glide/master/static/glide_logo.png")
+                //.placeholder(R.drawable.placeholder) // placeholder image will be shown before the image is loaded
+                //.error(R.drawable.error) // error fallback will be shown if, there is an error while downloading image
+                //.override(200, 200) // you are not sure about the size of the image loaded from the remote server that what will be the size of the image
+                //.centerCrop()
+                .into(imageView);
+    }
+}
