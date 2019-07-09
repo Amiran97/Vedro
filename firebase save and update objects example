@@ -1,0 +1,309 @@
+1) User.java нужно добавить как новый java-класс
+2) MainActivity.java и activity_main.xml - полностью обновляются
+3) все остальные файлы и зависимости проекта трогать не нужно!!!
+
+=======================================================================================================
+
+User.java:
+
+package com.vedro.firebase;
+
+import com.google.firebase.database.IgnoreExtraProperties;
+
+@IgnoreExtraProperties
+public class User {
+
+    public String name;
+    public String email;
+
+    // Default constructor required for calls to
+    // DataSnapshot.getValue(User.class)
+    public User() {
+    }
+
+    public User(String name, String email) {
+        this.name = name;
+        this.email = email;
+    }
+}
+
+=======================================================================================================
+
+MainActivity.java:
+
+package com.vedro.firebase;
+
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+
+public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
+
+    private GoogleApiClient mGoogleApiClient;
+    private FirebaseAuth mFirebaseAuth;
+
+    private TextView txtDetails;
+    private Button save;
+    private EditText inputName, inputEmail;
+    private DatabaseReference mFirebaseDatabase;
+    private ArrayList<DataSnapshot> ar;
+
+    private String userId;
+
+    public void save(View v) {
+        save.setEnabled(false);
+        save.setBackgroundColor(Color.DKGRAY);
+        save.setText("Please, wait...");
+        String name = inputName.getText().toString();
+        String email = inputEmail.getText().toString();
+
+        txtDetails.setText(name + ", " + email);
+
+        createUser(name, email);
+
+        inputEmail.setText("");
+        inputName.setText("");
+        inputName.requestFocus();
+    }
+
+    public void update(View v) {
+        String name = inputName.getText().toString();
+        String email = inputEmail.getText().toString();
+
+        updateUser(name, email);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.sign_out_menu:
+                mFirebaseAuth.signOut();
+                Auth.GoogleSignInApi.signOut(mGoogleApiClient);
+                startActivity(new Intent(this, AuthActivity.class));
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        ar = new ArrayList<>();
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this, this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API)
+                .build();
+
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        FirebaseUser mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        if (mFirebaseUser == null) {
+            startActivity(new Intent(this, AuthActivity.class));
+            finish();
+            return;
+        }
+
+        txtDetails = findViewById(R.id.txt_user);
+        inputName = findViewById(R.id.name);
+        inputEmail = findViewById(R.id.email);
+        save = findViewById(R.id.save);
+
+        FirebaseDatabase mFirebaseInstance = FirebaseDatabase.getInstance();
+
+        mFirebaseDatabase = mFirebaseInstance.getReference("users");
+
+        mFirebaseInstance.getReference("app_title").setValue("Firebase Save Data");
+
+        mFirebaseInstance.getReference("app_title").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String appTitle = dataSnapshot.getValue(String.class);
+
+                // update actionbar title
+                getSupportActionBar().setTitle(appTitle);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Toast.makeText(MainActivity.this, "failed to read app title...", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void createUser(String name, String email) {
+        if (TextUtils.isEmpty(userId)) {
+            userId = mFirebaseDatabase.push().getKey();
+        }
+
+        User user = new User(name, email);
+        mFirebaseDatabase.child(userId).setValue(user);
+        userId = "";
+        addUserChangeListener();
+    }
+
+    private void addUserChangeListener() {
+        mFirebaseDatabase.child(userId).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                ar = new ArrayList<>();
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
+                    ar.add(child);
+                }
+
+                save.setEnabled(true);
+                save.setBackgroundColor(Color.parseColor("#3F51B5"));
+                save.setText("Save new data");
+                Toast.makeText(MainActivity.this, "add user OK!", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Toast.makeText(MainActivity.this, "failed to read user data...", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateUser(String name, String email) {
+
+        boolean userExists = false;
+        String key = "";
+        for (DataSnapshot data : ar) {
+            if (data.getValue().toString().contains("email=" + email)) {
+                userExists = true;
+                key = data.getKey();
+                Toast.makeText(this, "data update OK!", Toast.LENGTH_SHORT).show();
+                break;
+            }
+        }
+
+        if (userExists) {
+            mFirebaseDatabase.child(key).child("name").setValue(name);
+            txtDetails.setText(name + ", " + email);
+        } else {
+            Toast.makeText(this, "sorry, this email does not exists!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Toast.makeText(this, "connection failed...", Toast.LENGTH_SHORT).show();
+    }
+}
+
+=======================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="20dp"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:paddingTop="20dp">
+
+    <TextView
+        android:id="@+id/txt_user"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_horizontal_margin"
+        android:text="Write down your name and email:"
+        android:layout_gravity="center"
+        android:textSize="20dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="name"
+                android:inputType="textCapWords"
+                android:maxLines="1" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="email"
+                android:inputType="textEmailAddress"
+                android:maxLines="1" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <Button
+            style="?android:textAppearanceSmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@color/colorPrimary"
+            android:onClick="save"
+            android:text="Save new data"
+            android:id="@+id/save"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+
+        <Button
+            style="?android:textAppearanceSmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@color/colorPrimary"
+            android:onClick="update"
+            android:text="Update name by email"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>
