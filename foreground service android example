@@ -87,7 +87,7 @@ public class MyService extends Service {
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
 
-            String CHANNEL_ID = "alex_channel";
+            String CHANNEL_ID = "vedro_channel";
 
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "VedroChannel",
                     NotificationManager.IMPORTANCE_HIGH);
