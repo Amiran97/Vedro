@@ -1,0 +1,159 @@
+Category.java:
+
+package com.vedro.realm;
+
+import io.realm.RealmObject;
+
+public class Category extends RealmObject {
+
+    private String name;
+
+    public Category() { }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+}
+
+===============================================================================================================================
+
+Product.java:
+
+package com.vedro.realm;
+
+import io.realm.RealmObject;
+
+public class Product extends RealmObject {
+
+    private String name;
+    private Category category;
+
+    public Product() {
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category c) {
+        category = c;
+    }
+
+}
+
+===============================================================================================================================
+
+MainActivity.java:
+
+package com.vedro.realm;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.widget.TextView;
+
+import io.realm.Case;
+import io.realm.Realm;
+import io.realm.RealmResults;
+
+public class MainActivity extends AppCompatActivity {
+
+    private Realm realm;
+
+    private TextView data;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // re-configurate realm database
+        Realm.init(getApplicationContext());
+
+        RealmConfiguration config = new RealmConfiguration.
+                Builder().
+                deleteRealmIfMigrationNeeded().
+                build();
+        Realm.setDefaultConfiguration(config);
+
+        realm = Realm.getDefaultInstance();
+
+        data = findViewById(R.id.data);
+
+        addCategory("молочные");
+        addCategory("мясные");
+        addProduct("молоко", "молочные");
+        addProduct("кефир", "молочные");
+        addProduct("мясо", "мясные");
+
+        showData();
+    }
+
+    public void addCategory(String name) {
+        Category c = new Category();
+        c.setName(name);
+
+        realm.beginTransaction();
+        realm.copyToRealm(c);
+        realm.commitTransaction();
+    }
+
+    public void addProduct(String name, String category) {
+        Product p = new Product();
+        p.setName(name);
+        Category c = realm.where(Category.class).equalTo("name", category, Case.INSENSITIVE).findFirst();
+        p.setCategory(c);
+        realm.beginTransaction();
+        realm.copyToRealm(p);
+        realm.commitTransaction();
+    }
+
+    public void showData() {
+
+        RealmResults<Product> products = realm.where(Product.class).findAll();
+
+        String results = "";
+        for (Product c : products) {
+            results += c.getName() + ", категория: " + c.getCategory().getName() + "\n";
+        }
+        if (!products.isEmpty()) data.setText(results);
+        else data.setText("в базе пока что нет данных");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        realm.close();
+    }
+}
+
+===============================================================================================================================
+
+activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/data"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="10dp" />
+
+</LinearLayout>
