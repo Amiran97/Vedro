@@ -1,0 +1,433 @@
+AndroidManifest.xml:
+
+...
+    <uses-permission android:name="android.permission.INTERNET" />
+...
+
+========================================================================================================================
+
+JokeAdapter.java:
+
+package com.vedro.retrofit;
+
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import java.util.List;
+
+class JokeAdapter extends RecyclerView.Adapter<JokeAdapter.ViewHolder> {
+
+    private List<JokeModel> jokes;
+
+    JokeAdapter(List<JokeModel> jokes) {
+        this.jokes = jokes;
+    }
+
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.post_item, parent, false);
+        return new ViewHolder(v);
+    }
+
+    @Override
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        JokeModel model = jokes.get(position);
+        String content = model.getContent();
+        content = content.replaceAll("! -", "\n -");
+        holder.joke.setText(content);
+    }
+
+    @Override
+    public int getItemCount() {
+        if (jokes == null)
+            return 0;
+        return jokes.size();
+    }
+
+    class ViewHolder extends RecyclerView.ViewHolder {
+        TextView joke;
+
+        ViewHolder(View itemView) {
+            super(itemView);
+            joke = itemView.findViewById(R.id.post);
+        }
+    }
+}
+
+========================================================================================================================
+
+JokeModel.java:
+
+package com.vedro.retrofit;
+
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
+public class JokeModel {
+
+    @SerializedName("content")
+    @Expose
+    private String content;
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+}
+
+========================================================================================================================
+
+JsonApi.java:
+
+package com.vedro.retrofit;
+
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.http.GET;
+import retrofit2.http.Query;
+
+interface JsonApi {
+
+    @GET("/android/retrofit/data.json")
+    Call<List<PostModel>> getData();
+
+    @GET("/RandJSON.aspx")
+    Call<JokeModel> getData(@Query("CType") int type);
+
+    // for example
+    @GET("/api/get")
+    Call<List<PostModel>> getData(@Query("name") String resourceName,
+                                  @Query("num") int count);
+}
+
+========================================================================================================================
+
+MainActivity.java:
+
+package com.vedro.retrofit;
+
+import android.app.ProgressDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class MainActivity extends AppCompatActivity {
+
+    RecyclerView recycler;
+    ProgressDialog progress;
+
+    ArrayList<JokeModel> jokes = new ArrayList<>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        recycler = findViewById(R.id.posts_recycle_view);
+        LinearLayoutManager lm = new LinearLayoutManager(this);
+        recycler.setLayoutManager(lm);
+
+        progress = new ProgressDialog(MainActivity.this);
+        progress.setMessage("Пожалуйста, подождите....");
+        progress.show();
+
+        // example1();
+        example2(); // please, comment previous line (example1) if you want to uncomment this line
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private void example1() {
+        RetrofitClient.BASE_URL = "https://sunmeat.000webhostapp.com/";
+        JsonApi service = RetrofitClient.getRetrofitInstance().create(JsonApi.class);
+        Call<List<PostModel>> call = service.getData();
+
+        call.enqueue(new Callback<List<PostModel>>() {
+            @Override
+            public void onResponse(Call<List<PostModel>> call, Response<List<PostModel>> response) {
+                progress.dismiss();
+                fillRecycler(response.body());
+            }
+
+            @Override
+            public void onFailure(Call<List<PostModel>> call, Throwable t) {
+                progress.dismiss();
+                Toast.makeText(MainActivity.this, t.getMessage() + "", Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void fillRecycler(List<PostModel> response) {
+        PostAdapter adapter = new PostAdapter(response);
+        recycler.setAdapter(adapter);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    int types[] = {1, 2, 3, 4, 5, 6, 8};
+    String descriptions[] = {"Анекдоты", "Рассказы", "Стишки", "Афоризмы", "Цитаты", "Тосты", "Статусы"};
+    int rand = new Random().nextInt(types.length);
+    int type = types[rand];
+
+    private void example2() {
+
+        RetrofitClient.BASE_URL = "http://rzhunemogu.ru/";
+        JsonApi service = RetrofitClient.getRetrofitInstance().create(JsonApi.class);
+        // http://www.rzhunemogu.ru/FAQ.aspx
+        // 1 - Анекдоты
+        // 2 - Рассказы
+        // 3 - Стишки
+        // 4 - Афоризмы
+        // 5 - Цитаты
+        // 6 - Тосты
+        // 8 - Статусы
+
+        Call<JokeModel> call = service.getData(type);
+        getSupportActionBar().setTitle(descriptions[rand]);
+        call.enqueue(new Callback<JokeModel>() {
+            @Override
+            public void onResponse(Call<JokeModel> call, Response<JokeModel> response) {
+                addToRecycler(response.body());
+            }
+
+            @Override
+            public void onFailure(Call<JokeModel> call, Throwable t) {
+                //Toast.makeText(MainActivity.this, t.getMessage() + "", Toast.LENGTH_LONG).show();
+                example2();
+            }
+        });
+    }
+
+    int jokesCount = 0;
+
+    private void addToRecycler(JokeModel response) {
+        jokes.add(response);
+        if (jokesCount < 100) {
+            example2();
+            jokesCount++;
+        } else
+            progress.dismiss();
+
+        JokeAdapter adapter = new JokeAdapter(jokes);
+        recycler.setAdapter(adapter);
+    }
+}
+
+========================================================================================================================
+
+PostAdapter.java:
+
+package com.vedro.retrofit;
+
+import android.os.Build;
+import android.support.v7.widget.RecyclerView;
+import android.text.Html;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import java.util.List;
+
+class PostAdapter extends RecyclerView.Adapter<PostAdapter.ViewHolder> {
+
+    private List<PostModel> posts;
+
+    PostAdapter(List<PostModel> posts) {
+        this.posts = posts;
+    }
+
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.post_item, parent, false);
+        return new ViewHolder(v);
+    }
+
+    @Override
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        PostModel post = posts.get(position);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            holder.post.setText(Html.fromHtml(post.getElementPureHtml(), Html.FROM_HTML_MODE_LEGACY));
+        } else {
+            holder.post.setText(Html.fromHtml(post.getElementPureHtml()));
+        }
+    }
+
+    @Override
+    public int getItemCount() {
+        if (posts == null)
+            return 0;
+        return posts.size();
+    }
+
+    class ViewHolder extends RecyclerView.ViewHolder {
+        TextView post;
+
+        ViewHolder(View itemView) {
+            super(itemView);
+            post = itemView.findViewById(R.id.post);
+        }
+    }
+}
+
+========================================================================================================================
+
+PostModel.java:
+
+package com.vedro.retrofit;
+
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
+public class PostModel {
+
+    @SerializedName("site")
+    @Expose
+    private String site;
+    @SerializedName("name")
+    @Expose
+    private String name;
+    @SerializedName("desc")
+    @Expose
+    private String desc;
+    @SerializedName("link")
+    @Expose
+    private Object link;
+    @SerializedName("elementPureHtml")
+    @Expose
+    private String elementPureHtml;
+
+    public String getSite() {
+        return site;
+    }
+
+    public void setSite(String site) {
+        this.site = site;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    public Object getLink() {
+        return link;
+    }
+
+    public void setLink(Object link) {
+        this.link = link;
+    }
+
+    public String getElementPureHtml() {
+        return elementPureHtml;
+    }
+
+    public void setElementPureHtml(String elementPureHtml) {
+        this.elementPureHtml = elementPureHtml;
+    }
+}
+
+========================================================================================================================
+
+RetrofitClient.java:
+
+package com.vedro.retrofit;
+
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+public class RetrofitClient {
+
+     static Retrofit retrofit;
+     static String BASE_URL;
+
+     static Retrofit getRetrofitInstance() {
+        if (retrofit == null) {
+            retrofit = new retrofit2.Retrofit.Builder()
+                    .baseUrl(BASE_URL)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+        return retrofit;
+    }
+}
+
+========================================================================================================================
+
+res / layout / activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:background="@drawable/android"
+    android:layout_height="match_parent">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/posts_recycle_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true" />
+</RelativeLayout>
+
+========================================================================================================================
+
+res / layout / post_item.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="10dp"
+    android:padding="5dp">
+
+    <TextView
+        android:id="@+id/post"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="15sp" />
+
+</android.support.v7.widget.CardView>
+
+========================================================================================================================
+
+build.gradle (Module:app):
+
+dependencies {
+    ...
+    implementation 'com.android.support:cardview-v7:28.0.0-rc01'
+    implementation 'com.android.support:recyclerview-v7:28.0.0-rc01'
+    implementation 'com.squareup.retrofit2:retrofit:2.4.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
+}
