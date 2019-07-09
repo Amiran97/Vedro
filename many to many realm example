@@ -1,0 +1,161 @@
+Category.java:
+
+package com.vedro.realm;
+
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
+
+public class Category extends RealmObject {
+
+    @PrimaryKey
+    private String name;
+
+    public Category() { }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+}
+
+======================================================================================================================
+
+Product.java:
+
+package com.vedro.realm;
+import io.realm.RealmList;
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
+
+public class Product extends RealmObject {
+
+    @PrimaryKey
+    private String name;
+    private RealmList<Category> categories;
+
+    public Product() {
+        categories = new RealmList<>();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public RealmList<Category> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(RealmList<Category> categories) {
+        this.categories = categories;
+    }
+
+}
+
+======================================================================================================================
+
+MainActivity.java:
+
+package com.vedro.realm;
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.widget.TextView;
+
+import io.realm.Case;
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
+import io.realm.RealmResults;
+
+public class MainActivity extends AppCompatActivity {
+
+    private Realm realm;
+
+    private TextView data;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        Realm.init(getApplicationContext());
+
+        RealmConfiguration config = new RealmConfiguration.
+                Builder().
+                deleteRealmIfMigrationNeeded().
+                build();
+        Realm.setDefaultConfiguration(config);
+
+        realm = Realm.getDefaultInstance();
+
+        data = findViewById(R.id.data);
+
+        addCategory("заморозка");
+        addCategory("мясные");
+        addCategory("канцтовары");
+        addProduct("мясо", "заморозка");
+        addProduct("мясо", "мясные");
+        addProduct("мясо", "канцтовары");
+        addProduct("мороженое", "заморозка");
+        addProduct("замороженный скотч", "заморозка");
+        addProduct("замороженный скотч", "канцтовары");
+
+        showData();
+    }
+
+    public void addCategory(String name) {
+        Category c = new Category();
+        c.setName(name);
+
+        realm.beginTransaction();
+        realm.copyToRealm(c);
+        realm.commitTransaction();
+    }
+
+    public void addProduct(String name, String category) {
+        realm.beginTransaction();
+
+        Product p = realm.where(Product.class).equalTo("name", name, Case.INSENSITIVE).findFirst();
+        if (p == null) {
+            p = new Product();
+            p.setName(name);
+        }
+
+        Category c = realm.where(Category.class).equalTo("name", category, Case.INSENSITIVE).findFirst();
+        p.getCategories().add(c);
+
+        realm.copyToRealmOrUpdate(p);
+        realm.commitTransaction();
+    }
+
+    public void showData() {
+
+        realm.beginTransaction();
+        RealmResults<Product> products = realm.where(Product.class).findAll();
+
+        String results = "";
+        for (Product c : products) {
+            results += c.getName() + ", категории: ";
+            for (Category cat : c.getCategories()) {
+                results += cat.getName() + " ";
+            }
+            results += "\n";
+        }
+        if (!products.isEmpty()) data.setText(results);
+        else data.setText("в базе пока что нет данных");
+        realm.commitTransaction();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        realm.close();
+    }
+}
