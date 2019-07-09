@@ -1,0 +1,482 @@
+AndroidManifest.xml:
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! CHECK THIS STRING: <application android:name="your.package.AppController" !!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.vedro.volley">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+    
+        android:name=".AppController"
+        
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+
+===========================================================================================================================
+
+AppController.java:
+
+package com.vedro.volley;
+
+import android.app.Application;
+import android.text.TextUtils;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.Volley;
+
+public class AppController extends Application {
+
+    public static final String TAG = AppController.class
+            .getSimpleName();
+
+    private RequestQueue mRequestQueue;
+    private ImageLoader mImageLoader;
+
+    private static AppController mInstance;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        mInstance = this;
+    }
+
+    public static synchronized AppController getInstance() {
+        return mInstance;
+    }
+
+    public RequestQueue getRequestQueue() {
+        if (mRequestQueue == null) {
+            mRequestQueue = Volley.newRequestQueue(getApplicationContext());
+        }
+
+        return mRequestQueue;
+    }
+
+    public ImageLoader getImageLoader() {
+        getRequestQueue();
+        if (mImageLoader == null) {
+            mImageLoader = new ImageLoader(this.mRequestQueue,
+                    new LRUBitmapCache());
+        }
+        return this.mImageLoader;
+    }
+
+    public <T> void addToRequestQueue(Request<T> req, String tag) {
+        // set the default tag if tag is empty
+        req.setTag(TextUtils.isEmpty(tag) ? TAG : tag);
+        getRequestQueue().add(req);
+    }
+
+    public <T> void addToRequestQueue(Request<T> req) {
+        req.setTag(TAG);
+        getRequestQueue().add(req);
+    }
+
+    public void cancelPendingRequests(Object tag) {
+        if (mRequestQueue != null) {
+            mRequestQueue.cancelAll(tag);
+        }
+    }
+}
+
+===========================================================================================================================
+
+LRUBitmapCache.java:
+
+package com.vedro.volley;
+
+import com.android.volley.toolbox.ImageLoader.ImageCache;
+
+import android.graphics.Bitmap;
+import android.support.v4.util.LruCache;
+
+/* Под кэшированием будем понимать сохранение результатов вычислений в ответ
+на некоторые запросы. То есть, повторный результат запроса не всегда вычисляется
+заново, но иногда берется из таблицы, называемой кэшем. При этом часто возникает
+проблема, связанная с недостатком памяти. Действительно, что делать, если запросов
+много, а памяти хватает лишь для хранения ограниченного числа результатов? В этом
+случае, как правило, кеш строится следующим образом. Фиксируется размер кэша,
+пусть будет N, и сохраняются результаты только для N самых «популярных» запросов.
+То есть сохраняются результаты вычислений, которые скорее всего запросят заново.
+Как определять эти «популярные» запросы? Наиболее известным способом является LRU.
+
+LRU (least recently used) — это алгоритм, при котором вытесняются значения,
+которые дольше всего не запрашивались. Соответственно, необходимо хранить время
+последнего запроса к значению. И как только число закэшированных значений
+превосходит N необходимо вытеснить из кеша значение, которое дольше всего не
+запрашивалось.  */
+
+// https://habrahabr.ru/post/136758/
+
+public class LRUBitmapCache extends LruCache<String, Bitmap> implements
+        ImageCache {
+        
+    int maxMemory;
+    int cacheSize;
+        
+    public static int getDefaultLruCacheSize() {
+        maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+        cacheSize = maxMemory / 8;
+        Log.i("cache_log", maxMemory + ""); 
+        Log.i("cache_log", cacheSize + ""); // ~24576
+
+        return cacheSize;
+    }
+
+    public LRUBitmapCache() {
+        this(getDefaultLruCacheSize());
+    }
+
+    public LRUBitmapCache(int sizeInKiloBytes) {
+        super(sizeInKiloBytes);
+    }
+
+    @Override
+    protected int sizeOf(String key, Bitmap value) {
+        return value.getRowBytes() * value.getHeight() / 1024;
+    }
+
+    @Override
+    public Bitmap getBitmap(String url) {
+        return get(url);
+    }
+
+    @Override
+    public void putBitmap(String url, Bitmap bitmap) {
+        put(url, bitmap);
+    }
+}
+
+===========================================================================================================================
+
+MainActivity.java:
+
+package com.vedro.volley;
+
+import android.app.ProgressDialog;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+import com.android.volley.Cache;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void oneObjectRequest(View view) {
+        // tag used to cancel the request
+        String cancelRequestTag = "one_object";
+
+        // текстовый файл должен быть сохранён в кодировке UTF-8 !!!
+        String url = "https://sunmeat.000webhostapp.com/android/volley/object.json";
+
+        final ProgressDialog pDialog = new ProgressDialog(this);
+        pDialog.setMessage("Подождите...");
+        pDialog.show();
+
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.GET,
+                url, null,
+                new Response.Listener<JSONObject>() {
+
+                    @Override
+                    public void onResponse(JSONObject resp) {
+                        Toast.makeText(MainActivity.this, resp.toString(), Toast.LENGTH_LONG).show();
+                        pDialog.hide();
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                // VolleyLog.d("json_resp", "Error: " + error.getMessage());
+                pDialog.hide();
+            }
+        });
+
+        // adding request to request queue
+        AppController.getInstance().addToRequestQueue(jsonObjReq, cancelRequestTag);
+
+        // following will cancel all the request with the tag named “one_object”
+        // AppController.getInstance().getRequestQueue().cancelAll("one_object");
+    }
+
+    public void arrayObjectsRequest(View view) {
+        String cancelRequestTag = "objects_array";
+
+        String url = "https://sunmeat.000webhostapp.com/android/volley/array.json";
+
+        final ProgressDialog pDialog = new ProgressDialog(this);
+        pDialog.setMessage("Подождите...");
+        pDialog.show();
+
+        JsonArrayRequest jsonObjReq = new JsonArrayRequest(url,
+                new Response.Listener<JSONArray>() {
+
+                    @Override
+                    public void onResponse(JSONArray resp) {
+                        Toast.makeText(MainActivity.this, resp.toString(), Toast.LENGTH_LONG).show();
+                        pDialog.hide();
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                // VolleyLog.d("json_resp", "Error: " + error.getMessage());
+                pDialog.hide();
+            }
+        });
+
+        // adding request to request queue
+        AppController.getInstance().addToRequestQueue(jsonObjReq, cancelRequestTag);
+    }
+
+    public void stringRequest(View view) {
+        String cancelRequestTag = "string";
+
+        String url = "https://sunmeat.000webhostapp.com/android/volley/plain.txt";
+
+        final ProgressDialog pDialog = new ProgressDialog(this);
+        pDialog.setMessage("Подождите...");
+        pDialog.show();
+
+        StringRequest jsonObjReq = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+
+                    @Override
+                    public void onResponse(String resp) {
+                        Toast.makeText(MainActivity.this, resp, Toast.LENGTH_LONG).show();
+                        pDialog.hide();
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                // VolleyLog.d("json_resp", "Error: " + error.getMessage());
+                pDialog.hide();
+            }
+        });
+
+        AppController.getInstance().addToRequestQueue(jsonObjReq, cancelRequestTag);
+    }
+
+    public void postParams(View view) {
+        String cancelRequestTag = "script";
+
+        String url = "https://sunmeat.000webhostapp.com/android/volley/script.php";
+
+        final ProgressDialog pDialog = new ProgressDialog(this);
+        pDialog.setMessage("Подождите...");
+        pDialog.show();
+
+        StringRequest jsonObjReq = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+
+                    @Override
+                    public void onResponse(String resp) {
+                        Toast.makeText(MainActivity.this, resp, Toast.LENGTH_LONG).show();
+                        pDialog.hide();
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                // VolleyLog.d("json_resp", "Error: " + error.getMessage());
+                pDialog.hide();
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("first", "10");
+                params.put("second", "15");
+                return params;
+            }
+        };
+
+        AppController.getInstance().addToRequestQueue(jsonObjReq, cancelRequestTag);
+    }
+
+    public void loadImage(View view) {
+        final ImageView img = findViewById(R.id.img);
+
+        ImageLoader imageLoader = AppController.getInstance().getImageLoader();
+
+        imageLoader.get("https://sunmeat.000webhostapp.com/android/volley/image.png", ImageLoader.getImageListener(
+                img, R.drawable.wait, R.drawable.error));
+
+        /*imageLoader.get("https://sunmeat.000webhostapp.com/android/volley/image.png", new ImageLoader.ImageListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this, "Image Load Error: " + error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onResponse(ImageLoader.ImageContainer response, boolean arg1) {
+                if (response.getBitmap() != null) {
+
+                    Toast.makeText(MainActivity.this, "OK!", Toast.LENGTH_SHORT).show();
+                    img.setImageBitmap(response.getBitmap());
+                }
+            }
+        }); */
+    }
+
+    public void loadImageFromCache(View view) {
+        final ImageView img = findViewById(R.id.img);
+
+        Cache cache = AppController.getInstance().getRequestQueue().getCache();
+        Cache.Entry entry = cache.get("https://sunmeat.000webhostapp.com/android/volley/image.png");
+        if (entry != null) {
+            try {
+                Bitmap b = BitmapFactory.decodeByteArray(entry.data, 0, entry.data.length);
+                img.setImageBitmap(b);
+            } catch (Exception ignored) {
+                Toast.makeText(this, "Oops! Smth wrong!", Toast.LENGTH_SHORT).show();
+            }
+
+            // use remove() to delete cache of an URL.
+            // AppController.getInstance().getRequestQueue().getCache().remove(url);
+        } else {
+            ImageLoader imageLoader = AppController.getInstance().getImageLoader();
+
+            imageLoader.get("https://sunmeat.000webhostapp.com/android/volley/image.png", ImageLoader.getImageListener(
+                    img, R.drawable.wait, R.drawable.error));
+        }
+    }
+}
+
+===========================================================================================================================
+
+drawable:
+
+need error.xml vector asset
+need wait.xml vector asset
+
+===========================================================================================================================
+
+layout / activity_main.xml:
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="16dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingTop="16dp">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:onClick="oneObjectRequest"
+        android:text="JSON Object Request"
+        android:textAllCaps="false" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:onClick="arrayObjectsRequest"
+        android:text="Array of Objects Request"
+        android:textAllCaps="false" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:onClick="stringRequest"
+        android:text="String Request"
+        android:textAllCaps="false" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:onClick="postParams"
+        android:text="Post Params Request"
+        android:textAllCaps="false" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:onClick="loadImage"
+        android:text="Load Image"
+        android:textAllCaps="false" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:onClick="loadImageFromCache"
+        android:text="Load Image From Cache"
+        android:textAllCaps="false" />
+
+    <ImageView
+        android:id="@+id/img"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="10dp" />
+
+</LinearLayout>
+
+===========================================================================================================================
+
+build.gradle (Module:app):
+
+dependencies {
+    ...
+    implementation 'com.android.volley:volley:1.1.1'
+}
