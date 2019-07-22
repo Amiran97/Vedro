@@ -117,7 +117,7 @@ class FaceOverlayView extends View {
 activity_main.xml:
 
 <?xml version="1.0" encoding="utf-8"?>
-<com.vedro.facedetector.FaceOverlayView xmlns:android="http://schemas.android.com/apk/res/android"
+<your_package_name.FaceOverlayView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/face_overlay"
     android:layout_width="match_parent"
     android:layout_height="match_parent" />
